@@ -1,4 +1,3 @@
-import java.util.Arrays;
 
 public class Board {
   public int dim;
@@ -6,15 +5,12 @@ public class Board {
   
   public static void main(String[] args) {
     Board one = new Board(4);
-    one.setField(0, 0, 0, Mark.X);
-    one.setField(1, 1, 1, Mark.X);
-    one.setField(2, 2, 1, Mark.X);
-    one.setField(3, 3, 1, Mark.X);
-    System.out.println(one.getField(0, 0, 0));
-    System.out.println(one.getField(1, 1, 0));
-    System.out.println(one.getField(2, 2, 0));
-    System.out.println(one.getField(3, 3, 0));
-    System.out.println(one.hasLayerDiagonal(Mark.X));
+    one.setField(0, 0, 3, Mark.X);
+    one.setField(0, 1, 2, Mark.X);
+    one.setField(0, 2, 1, Mark.X);
+    one.setField(0, 3, 0, Mark.X);
+
+    System.out.println(one.has2DLine(Mark.X));
   }
   
   public Board(int tDIM) {
@@ -59,82 +55,80 @@ public class Board {
     }
   }
   
-  public boolean hasLayerDiagonal(Mark m) {
+  public boolean has1DLine(Mark m) {
+    int yseq;
+    int zseq;
+    int xseq;
     for (int z = 0; z < dim; z++) {
-      for (int y = 0; y < dim; y++) {
-        for (int x = 0; x < dim; x++) {
-          if (getField(x,y,z)==m) {
-            if (getField(x-1,y-1,z)==m) {
-              if (getField(x-2,y-2,z)==m) {
-                if (getField(x-3,y-3,z)==m) {
+      for (int x = 0; x < dim; x++) {
+        yseq = 0;
+        for (int y = 0; y < dim; y++) {
+          if (getField(x,y,z).equals(m)) {
+            yseq++;
+            if (yseq == 4) {
+              return true;
+            }
+            if (z == 0) {
+              zseq = 0;
+              for (int i = 0; i < dim; i++) {
+                if (getField(x,y,i).equals(m)) {
+                  zseq++;
+                }
+                if (zseq == 4) {
                   return true;
                 }
               }
             }
-            if (getField(x-1,y+1,z)==m) {
-              if (getField(x-2,y+2,z)==m) {
-                if (getField(x-3,y+3,z)==m) {
-                  return true;
+            if (x == 0) {
+              xseq = 0;
+              for (int j = 0; j < dim; j++) {
+                if (getField(j,y,z).equals(m)) {
+                  xseq++;
                 }
-              }              
-            }
-            if (getField(x+1,y-1,z)==m) {
-              if (getField(x+2,y-2,z)==m) {
-                if (getField(x+3,y-3,z)==m) {
-                  return true;
-                }
-              }
-            }
-            if (getField(x+1,y+1,z)==m) {
-              if (getField(x+2,y+2,z)==m) {
-                if (getField(x+3,y+3,z)==m) {
+                if (xseq == 4) {
                   return true;
                 }
               }
             }
           }
-        }
-      }
-    }
-    return false;
-  }
-  public boolean hasLayerColumn(Mark m) {
-    int streak = 0;
-    for (int z = 0; z < dim; z++) {
-      for (int y = 0; y < dim; y++) {
-        for (int x = 0; x < dim; x++) {
-          if (getField(x,y,z) == m) {
-            if (streak < 4) {
-              streak++;
-            }
-          } else {
-            streak = 0;
-          }
-        }
-        if (streak == 4) {
-          return true;
         }
       }
     }
     return false;
   }
   
-  public boolean hasLayerRow(Mark m) {
-    int streak = 0;
-    for (int i = 0; i < dim; i++) {
-      for (int j = 0; j < dim; j++) {
-        for (int k = 0; k < dim; k++) {
-          if (getField(j,k,i) == m) {
-            if (streak < 4) {
-              streak++;
-            }
-          } else {
-            streak = 0;
-          }
-          if (streak == 4) {
-            return true;
-          }
-        }
+  public boolean has2DLine(Mark m) {
+    for (int x = 0, y = 0; x < dim; y++) {
+      if (!getField(x,y,y).equals(m)) {
+        y = 0;
+        x++;
+      } else if (y == 3) {
+        return true;
+      }
+    }
+    for (int x = 0, y = 0; y < dim; x++) {
+      if (!getField(x,y,x).equals(m)) {
+        x = 0;
+        y++;
+      } else if (x == 3) {
+        return true;
+      }
+    }
+    for (int x = 3, y = 0; y < dim; x--) {
+      if (!getField(x,y,3-x).equals(m)) {
+        x = 3;
+        y++;
+      } else if (x == 0) {
+        return true;
+      }
+    }
+    
+    for (int x = 0, y = 3; x < dim; y--) {
+      if (!getField(x,y,3-y).equals(m)) {
+        y = 3;
+        x++;
+      } else if (y == 0) {
+        return true;
       }
     }
     return false;
