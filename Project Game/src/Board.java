@@ -5,12 +5,16 @@ public class Board {
   
   public static void main(String[] args) {
     Board one = new Board(4);
-    one.setField(0, 0, 3, Mark.X);
-    one.setField(0, 1, 2, Mark.X);
-    one.setField(0, 2, 1, Mark.X);
+//    one.setField(0, 0, 3, Mark.X);
+//    one.setField(1, 1, 2, Mark.X);
+//    one.setField(2, 2, 1, Mark.X);
+//    one.setField(3, 3, 0, Mark.X);
+//    
     one.setField(0, 3, 0, Mark.X);
-
-    System.out.println(one.has2DLine(Mark.X));
+    one.setField(1, 2, 1, Mark.X);
+    one.setField(2, 1, 2, Mark.X);
+    one.setField(3, 0, 3, Mark.X);
+    System.out.println(one.has3DLine(Mark.X));
   }
   
   public Board(int tDIM) {
@@ -115,19 +119,58 @@ public class Board {
       }
     }
     for (int x = 3, y = 0; y < dim; x--) {
-      if (!getField(x,y,3-x).equals(m)) {
+      if (!getField(x,y,3 - x).equals(m)) {
         x = 3;
         y++;
       } else if (x == 0) {
         return true;
       }
     }
-    
     for (int x = 0, y = 3; x < dim; y--) {
-      if (!getField(x,y,3-y).equals(m)) {
+      if (!getField(x,y,3 - y).equals(m)) {
         y = 3;
         x++;
       } else if (y == 0) {
+        return true;
+      }
+    }
+    for (int x = 0, y = 0, z = 0; y < dim; x++,y++,z++) {
+      if (!getField(x,y,z).equals(m)) {
+        break;
+      } else if (x == 3) {
+        return true;
+      }
+    }
+    for (int x = 3, y = 0,z = 0; y < dim; x--,y++,z++) {
+      if (!getField(x,y,z).equals(m)) {
+        break;
+      } else if (x == 3) {
+        return true;
+      }
+    }
+  
+    return false;
+  }
+  
+  public boolean has3DLine(Mark m) {
+    int one = 0;
+    int two = 0;
+    int three = 0;
+    int four = 0;
+    for (int i = 3; i >= 0; i--) {
+      if (getField(-i+3,-i+3,-i+3).equals(m)) {
+        one++;
+      }
+      if (getField(-i+3,i,i).equals(m)) {
+        two++;
+      }
+      if (getField(-i+3,-i+3,i).equals(m)) {
+        three++;
+      }
+      if (getField(-i+3,i,-i+3).equals(m)) {
+        four++;
+      }
+      if (i == 0 && (one == 4 || two == 4 || three == 4 || four == 4 )) {
         return true;
       }
     }
