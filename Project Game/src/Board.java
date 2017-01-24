@@ -1,5 +1,7 @@
+import java.util.Arrays;
+import java.util.Observable;
 
-public class Board {
+public class Board extends Observable {
   public int dim;
   public Mark[][][] fields;
   
@@ -14,7 +16,8 @@ public class Board {
     one.setField(1, 2, 1, Mark.X);
     one.setField(2, 1, 2, Mark.X);
     one.setField(3, 0, 3, Mark.X);
-    System.out.println(one.has3DLine(Mark.X));
+    System.out.println(Arrays.deepToString(one.fields));
+    System.out.println(Arrays.deepToString(one.deepCopy().fields));
   }
   
   public Board(int tDIM) {
@@ -27,6 +30,12 @@ public class Board {
         }
       }
     }
+  }
+  
+  public Board deepCopy() {
+    Board result = new Board(dim);
+    result.fields = this.fields;
+    return result;
   }
   
   public boolean isField(int x, int y, int z) {
@@ -56,8 +65,11 @@ public class Board {
   public void setField(int x, int y, int z, Mark m) {
     if (isField(x, y, z)) {
       fields[x][y][z] = m;
+      notifyObservers("Field");
     }
   }
+  
+  
   
   public boolean has1DLine(Mark m) {
     int yseq;
@@ -158,16 +170,16 @@ public class Board {
     int three = 0;
     int four = 0;
     for (int i = 3; i >= 0; i--) {
-      if (getField(-i+3,-i+3,-i+3).equals(m)) {
+      if (getField(-i + 3,-i + 3,-i + 3).equals(m)) {
         one++;
       }
-      if (getField(-i+3,i,i).equals(m)) {
+      if (getField(-i + 3,i,i).equals(m)) {
         two++;
       }
-      if (getField(-i+3,-i+3,i).equals(m)) {
+      if (getField(-i + 3,-i + 3,i).equals(m)) {
         three++;
       }
-      if (getField(-i+3,i,-i+3).equals(m)) {
+      if (getField(-i + 3,i,-i + 3).equals(m)) {
         four++;
       }
       if (i == 0 && (one == 4 || two == 4 || three == 4 || four == 4 )) {
@@ -176,4 +188,39 @@ public class Board {
     }
     return false;
   }
+  
+  public boolean isWinner(Mark m) {
+      return has1DLine(m) || has2DLine(m) || has3DLine(m);
+  }
+  
+  public boolean hasWinner() {
+    return isWinner(Mark.O) || isWinner(Mark.X);
+  }
+  public boolean isFull() {
+    for (int z = 0; z < dim; z++) {
+      for (int y = 0; y < dim; y++) {
+        for (int x = 0; x < dim; x++) {
+          if (isEmptyField(x,y,z)) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+  
+  public boolean gameOver() {
+    return isFull() || hasWinner();
+  }
+  
+  public void reset() {
+    for (int i = 0; i < fields.length; i++) {
+      for (int j = 0; j < fields[i].length; j++) {
+        for (int k = 0; k < fields[i][j].length; k++) {
+          fields[i][j][k] = Mark.E;
+        }
+      }
+    }
+  }
+  
 }
