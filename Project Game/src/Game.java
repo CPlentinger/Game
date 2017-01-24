@@ -1,8 +1,18 @@
 
 public class Game {
-
-  public static void main(String[] args) {
-    TUIView view = new TUIView(new Board(4));
-    view.start();
+  public Controller controller;
+  public TUIView view;
+  
+  public Game(Controller c) {
+    this.controller = c;
+    this.view = new TUIView(c);
+    controller.board.addObserver(view);
   }
+  
+  public void start() {
+    
+  }
+  
+  
+  
 }

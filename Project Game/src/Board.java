@@ -6,18 +6,6 @@ public class Board extends Observable {
   public Mark[][][] fields;
   
   public static void main(String[] args) {
-    Board one = new Board(4);
-//    one.setField(0, 0, 3, Mark.X);
-//    one.setField(1, 1, 2, Mark.X);
-//    one.setField(2, 2, 1, Mark.X);
-//    one.setField(3, 3, 0, Mark.X);
-//    
-    one.setField(0, 3, 0, Mark.X);
-    one.setField(1, 2, 1, Mark.X);
-    one.setField(2, 1, 2, Mark.X);
-    one.setField(3, 0, 3, Mark.X);
-    System.out.println(Arrays.deepToString(one.fields));
-    System.out.println(Arrays.deepToString(one.deepCopy().fields));
   }
   
   public Board(int tDIM) {
@@ -232,6 +220,10 @@ public class Board extends Observable {
         }
       }
     }
+  }
+  
+  public Mark[][][] getFields() {
+    return fields;
   }
   
 }
