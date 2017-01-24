@@ -53,7 +53,18 @@ public class Board extends Observable {
       return false;
     }
   }
-    
+  
+  public boolean isEmptyLayer(int z) {
+    for (int x = 0; x < dim; x++) {
+      for (int y = 0; y < dim; y++) {
+        if (!isEmptyField(x,y,z)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  
   public Mark getField(int x, int y, int z) {
     if (isField(x, y, z)) {
       return fields[x][y][z];
