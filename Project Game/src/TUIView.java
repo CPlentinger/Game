@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
@@ -14,10 +15,17 @@ public class TUIView implements Observer {
   }
   
   public void start() {
-    View();
+    view();
+    handleTerminalInput();
   }
   
-  public void View() {
+  public void view() {
+    try {
+      controller.out.write(makeYAxis());
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
     System.out.print(makeYAxis());
     System.out.print(makeFields());
     System.out.print(makeXAxis());
@@ -66,7 +74,9 @@ public class TUIView implements Observer {
     for (int i = 0; i < board.dim; i++) {
       String Xaxis = i + " │"; 
       for (int j = 0; j < board.dim; j++) {
-        if (!board.isEmptyLayer(j)) {
+        if (j == 0) {
+          line += Xaxis + lines[i+4*j] + Space;
+        } else if (!board.isEmptyLayer(j)) {
           line += Xaxis + lines[i+4*j] + Space;
         }
       }
@@ -87,9 +97,24 @@ public class TUIView implements Observer {
     return result;
   }
 
+  public void handleTerminalInput() {
+    System.out.print("Make your move (x,y): ");
+    Scanner in = new Scanner(System.in);
+    while (in.hasNext()) {
+      String next = in.next();
+      int xval = Integer.parseInt(next.substring(0, next.indexOf(",")));
+      int yval = Integer.parseInt(next.substring(next.indexOf(",")+1, next.length()));
+      controller.makeMove(xval, yval);
+      break;
+    }
+    in.close();
+  }
+  
+  
+  
   @Override
   public void update(Observable arg0, Object arg1) {
-    View();
+    view();
   }
   
 }

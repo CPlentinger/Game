@@ -64,7 +64,8 @@ public class Board extends Observable {
   public void setField(int x, int y, int z, Mark m) {
     if (isField(x, y, z)) {
       fields[x][y][z] = m;
-      notifyObservers("Field");
+      setChanged();
+      notifyObservers();
     }
   }
   
