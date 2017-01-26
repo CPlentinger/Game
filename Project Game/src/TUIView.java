@@ -1,37 +1,20 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Scanner;
 
-public class TUIView implements Observer {
+public class TUIView {
   
-  public Controller controller;
-  public Board board;
-  
-  public TUIView(Controller controller) {
-    this.controller = controller;
-    this.board = controller.board;
+  public void view(Board board) {
+    System.out.print(makeYAxis(board));
+    System.out.print(makeFields(board));
+    System.out.print(makeXAxis(board));
   }
   
-  public void start() {
-    view();
-    handleTerminalInput();
-  }
-  
-  public void view() {
-    try {
-      controller.out.write(makeYAxis());
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    System.out.print(makeYAxis());
-    System.out.print(makeFields());
-    System.out.print(makeXAxis());
-  }
-  
-  public String makeYAxis() {
+  public String makeYAxis(Board board) {
     String Yaxis = " | 0 1 2 3 Y";
     String Delim = "──┼────────  ";
     String Space = "        ";
@@ -48,7 +31,7 @@ public class TUIView implements Observer {
     return firstLine + secLine;
   }
   
-  public String[] makeFieldsArray() {
+  public String[] makeFieldsArray(Board board) {
     String[] result = new String[board.dim*board.dim];
     for (int z = 0; z < board.dim; z++) {
       for (int x = 0; x < board.dim; x++) {
@@ -67,8 +50,8 @@ public class TUIView implements Observer {
     return result;
   }
   
-  public String makeFields() {
-    String[] lines = makeFieldsArray();
+  public String makeFields(Board board) {
+    String[] lines = makeFieldsArray(board);
     String Space = "        ";
     String line = "";
     for (int i = 0; i < board.dim; i++) {
@@ -85,7 +68,7 @@ public class TUIView implements Observer {
     return line;
   }
   
-  public String makeXAxis() {
+  public String makeXAxis(Board board) {
     String Space = "                    ";
     String result = "X" + Space;
     for (int i = 1; i < board.dim; i++) {
@@ -96,25 +79,20 @@ public class TUIView implements Observer {
     result += "\n";
     return result;
   }
-
-  public void handleTerminalInput() {
-    System.out.print("Make your move (x,y): ");
-    Scanner in = new Scanner(System.in);
-    while (in.hasNext()) {
-      String next = in.next();
-      int xval = Integer.parseInt(next.substring(0, next.indexOf(",")));
-      int yval = Integer.parseInt(next.substring(next.indexOf(",")+1, next.length()));
-      controller.makeMove(xval, yval);
-      break;
+  
+  public String getResponse(String question) {
+    BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+    System.out.print(question);
+    String result = null;
+    try {
+        result = in.readLine();
+    } catch (IOException e) {
     }
-    in.close();
+
+    if (result != null) {
+      return result;
+    } else {
+      return null;
+    }
   }
-  
-  
-  
-  @Override
-  public void update(Observable arg0, Object arg1) {
-    view();
-  }
-  
 }

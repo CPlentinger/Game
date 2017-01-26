@@ -1,4 +1,4 @@
-package test;
+
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -25,10 +25,7 @@ public class Client {
     } 
     
     Socket socket = new Socket(adrs, port);
-    ClientHandler handler = new ClientHandler(socket);
-    Thread readThread = new Thread(handler);
-    readThread.start();
-    handler.handleTerminalInput();
+    new ClientHandler(socket).start();
   }
 
 }

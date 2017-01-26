@@ -1,3 +1,4 @@
+
 /**
  * The Class Protocol implements the protocol and provides functions to help implementing
  * the protocol. This protocol is for Group 7, Mod02 BIT/INF 2016/2017, UTWENTE
@@ -38,7 +39,7 @@ public class Protocol {
    */
   public static class Client {
 
-    public static final String SENDCAPABILITIES = "sendCapabilities";
+    public static final String SENDCAPABILITIES = "sendCapabilities 2 ";
 
     public static final String JOINROOM = "joinRoom";
 

@@ -1,4 +1,4 @@
-package test;
+
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -29,7 +29,6 @@ public class Server {
       socket2 = sock.accept();
       
       new ServerHandlerThread(socket1, socket2).start();
-      new ServerHandlerThread(socket2, socket1).start();
     }
   }
 

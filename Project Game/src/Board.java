@@ -4,12 +4,11 @@ import java.util.Observable;
 public class Board extends Observable {
   public int dim;
   public Mark[][][] fields;
-  
   public static void main(String[] args) {
   }
   
-  public Board(int tDIM) {
-    this.dim = tDIM;
+  public Board(int dim) {
+    this.dim = dim;
     fields = new Mark[dim][dim][dim];
     for (int i = 0; i < fields.length; i++) {
       for (int j = 0; j < fields[i].length; j++) {
@@ -42,6 +41,15 @@ public class Board extends Observable {
     }
   }
   
+  public boolean isEmptyField(int x, int y) {
+    for (int z = 0; z < dim; z++) {
+      if (isField(x,y,z) && isEmptyField(x,y,z)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
   public boolean isEmptyLayer(int z) {
     for (int x = 0; x < dim; x++) {
       for (int y = 0; y < dim; y++) {
@@ -64,6 +72,19 @@ public class Board extends Observable {
   public void setField(int x, int y, int z, Mark m) {
     if (isField(x, y, z)) {
       fields[x][y][z] = m;
+      setChanged();
+      notifyObservers();
+    }
+  }
+  
+  public void setField(int x, int y, Mark m) {
+    if (isField(x, y)) {
+      for (int z = 0; z < dim; z++) {
+        if (isEmptyField(x,y,z)) {
+          fields[x][y][z] = m;
+          break;
+        }
+      }
       setChanged();
       notifyObservers();
     }
