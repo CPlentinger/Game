@@ -2,10 +2,10 @@
 public enum Mark {
 	E, O, X;
 	
-	public Mark Other(Mark m) {
-		if (m.equals(O)) {
+	public Mark Other() {
+		if (this.equals(O)) {
 			return X;
-		} else if (m.equals(X)) {
+		} else if (this.equals(X)) {
 			return O;
 		} else {
 			return E;

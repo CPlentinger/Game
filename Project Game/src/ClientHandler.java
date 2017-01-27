@@ -11,15 +11,11 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Scanner;
 
-public class ClientHandler extends Thread implements Observer {
+public class ClientHandler extends Thread {
 
   private Socket server;
   private BufferedReader in;
   private BufferedWriter out;
-  private int id;
-  private String name;
-  private Mark m;
-  private TUIView view;
   private Controller clientGame;
   
   
@@ -27,17 +23,14 @@ public class ClientHandler extends Thread implements Observer {
     this.server = sock;
     this.in = new BufferedReader(new InputStreamReader(server.getInputStream()));
     this.out = new BufferedWriter(new OutputStreamWriter(server.getOutputStream()));
-    this.view = new TUIView();
+    this.clientGame = new Controller();
+    clientGame.setName(clientGame.getResponse("Choose your username: "));
   }
   
   public void run() {
-    this.name = view.getResponse("Choose your username: ");
     readInput();
   }
 
-  
-
-  
   public void readInput() {
     String message;
     try {
@@ -53,32 +46,32 @@ public class ClientHandler extends Thread implements Observer {
   public void handleInput(String message) {
     Scanner inScanner = new Scanner(message);
     switch (inScanner.next()) {
-      case Protocol.Server.SERVERCAPABILITIES: writeOutput(Protocol.Client.SENDCAPABILITIES + name + " 0 4 4 4 4 0 0");
+      case Protocol.Server.SERVERCAPABILITIES:
+        writeOutput(Protocol.Client.SENDCAPABILITIES + clientGame.getName() + " 0 4 4 4 4 0 0");
         break;
       case Protocol.Server.STARTGAME: startGame(message);
         break;
       case Protocol.Server.TURNOFPLAYER:
-        if (inScanner.nextInt() == id) {
+        if (inScanner.nextInt() == clientGame.getID()) {
           makeMove();
         } else {
           System.out.println("Waiting for opponents turn...");
         }
         break;
       case Protocol.Server.NOTIFYMOVE: 
-        if (inScanner.nextInt() == id) {
-          clientGame.board.setField(inScanner.nextInt(), inScanner.nextInt(), m);
+        if (inScanner.nextInt() == clientGame.getID()) {
+          clientGame.board.setField(inScanner.nextInt(), inScanner.nextInt(), clientGame.getMark());
         } else {
-          clientGame.board.setField(inScanner.nextInt(), inScanner.nextInt(), m.Other(m));
+          clientGame.board.setField(inScanner.nextInt(), inScanner.nextInt(), clientGame.getMark().Other());
         }
+        break;
+      default: System.out.println(message);
         break;
     }
   }
   
   private void makeMove() {
-    System.out.println("Player " + m.toString() + ",");
-    String move = view.getResponse("make your move (i.e.: x y):");
-    int x = Integer.parseInt(move.substring(0, 1));
-    int y = Integer.parseInt(move.substring(2));
+    String move = clientGame.getResponse("Player " + clientGame.getName() + " (" + clientGame.getMark().toString() + "), " + "make your move (i.e.: x y):");
     writeOutput(Protocol.Client.MAKEMOVE + " " + move);
   }
   
@@ -112,23 +105,16 @@ public class ClientHandler extends Thread implements Observer {
     String playerInfo = "";
     while (scan.hasNext()) {
       playerInfo = scan.next();
-      if (playerInfo.contains(name)) {
+      if (playerInfo.contains(clientGame.getName())) {
         break;
       }
     }
-    id = Integer.valueOf(playerInfo.split("\\|")[0]);
+    clientGame.setID(Integer.valueOf(playerInfo.split("\\|")[0]));
     if (playerInfo.split("\\|")[2].equals("ff0000")) {
-      m = Mark.X;
+      clientGame.setMark(Mark.X);
     } else {
-      m = Mark.O;
+      clientGame.setMark(Mark.O);
     }
-    clientGame = new Controller(message.substring(10,15));
-    clientGame.board.addObserver(this);
-    view.view(clientGame.board);
-  }
-
-  @Override
-  public void update(Observable arg0, Object arg1) {
-    view.view(clientGame.board);
+    clientGame.buildBoard(message.substring(10,15));
   }
 }

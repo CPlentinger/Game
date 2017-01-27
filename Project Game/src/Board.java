@@ -167,21 +167,24 @@ public class Board extends Observable {
         return true;
       }
     }
-    for (int x = 0, y = 0, z = 0; y < dim; x++,y++,z++) {
-      if (!getField(x,y,z).equals(m)) {
-        break;
-      } else if (x == 3) {
-        return true;
+    for (int z = 0; z < dim; z++) {
+      for (int x = 0, y = 0; y < dim; x++,y++) {
+        if (!getField(x,y,z).equals(m)) {
+          break;
+        } else if (x == 3) {
+          return true;
+        }
       }
     }
-    for (int x = 3, y = 0,z = 0; y < dim; x--,y++,z++) {
-      if (!getField(x,y,z).equals(m)) {
-        break;
-      } else if (x == 3) {
-        return true;
+    for (int z = 0; z < dim; z++) {
+      for (int x = 3, y = 0; y < dim; x--,y++) {
+        if (!getField(x,y,z).equals(m)) {
+          break;
+        } else if (x == 0) {
+          return true;
+        }
       }
     }
-  
     return false;
   }
   
@@ -228,10 +231,6 @@ public class Board extends Observable {
       }
     }
     return true;
-  }
-  
-  public boolean gameOver() {
-    return isFull() || hasWinner();
   }
   
   public void reset() {

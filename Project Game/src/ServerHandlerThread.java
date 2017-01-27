@@ -46,17 +46,16 @@ public class ServerHandlerThread extends Thread {
     readInput();
     changeTurn();
     readInput();
-    endGameCheck();
     startGame();
     while (true) {
       writeBoth(Protocol.Server.TURNOFPLAYER + " " + curTurnID);
       readInput();
-      changeTurn();
+      String endMessage;
+      if ((endMessage = serverGame.endGameCheck()) != null) {
+        writeBoth(endMessage);
+      }
     }
     
-  }
-  
-  private void endGameCheck() {
   }
 
   public void readInput() {
@@ -133,7 +132,8 @@ public class ServerHandlerThread extends Thread {
   
   public void startGame() {
     writeBoth(Protocol.Server.STARTGAME + gameCapabilities);
-    serverGame = new Controller(gameCapabilities.substring(1, 6));
+    serverGame = new Controller();
+    serverGame.buildBoard(gameCapabilities.substring(1, 6));
     changeTurn();
   }
   
@@ -150,8 +150,10 @@ public class ServerHandlerThread extends Thread {
     if (serverGame.checkMove(x, y)) {
       serverGame.makeMove(x, y, getMark());
       writeBoth(Protocol.Server.NOTIFYMOVE + " " + curTurnID + " " + x + " " + y);
+      changeTurn();
     } else {
-      writeOutput("Wrong Move");
+      writeOutput(Protocol.Server.TURNOFPLAYER + " " + curTurnID);
+      readInput();
     }
   }
   public void changeTurn() {

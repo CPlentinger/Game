@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 public class TUIView {
   
-  public void view(Board board) {
+  public void createView(Board board) {
     System.out.print("\n" + makeYAxis(board));
     System.out.print(makeFields(board));
     System.out.print(makeXAxis(board) + "\n");
