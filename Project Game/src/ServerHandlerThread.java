@@ -46,7 +46,7 @@ public class ServerHandlerThread extends Thread {
     readInput();
     changeTurn();
     readInput();
-    System.out.println("starting Game");
+    endGameCheck();
     startGame();
     while (true) {
       writeBoth(Protocol.Server.TURNOFPLAYER + " " + curTurnID);
@@ -56,6 +56,9 @@ public class ServerHandlerThread extends Thread {
     
   }
   
+  private void endGameCheck() {
+  }
+
   public void readInput() {
     String clientInput;
     try {
@@ -73,7 +76,7 @@ public class ServerHandlerThread extends Thread {
       switch (inScanner.next()) {
         case "sendCapabilities": handleCapabilities(input);
                                  break;
-        case "makeMove":         checkMove(inScanner.nextInt(), inScanner.nextInt());
+        case "makeMove":         makeMove(inScanner.nextInt(), inScanner.nextInt());
                                  break;
       }
       inScanner.close();
@@ -91,7 +94,6 @@ public class ServerHandlerThread extends Thread {
   
   public void writeBoth(String message) {
     try {
-      System.out.println(message);
       c1out.write(message);
       c1out.newLine();
       c1out.flush();
@@ -126,7 +128,6 @@ public class ServerHandlerThread extends Thread {
       StringJoiner joiner = new StringJoiner("|");
       joiner.add(" " + maxRoomDimensionX).add(String.valueOf(maxRoomDimensionY)).add(String.valueOf(maxRoomDimensionZ)).add(lengthToWin + " " + p1ID).add(p1Name).add("0000ff 2").add(p2Name).add("ff0000");
       gameCapabilities = joiner.toString();
-      System.out.println(gameCapabilities);
     }
   }
   
@@ -145,20 +146,20 @@ public class ServerHandlerThread extends Thread {
   }
   
   
-  public void checkMove(int x, int y) {
-    if (serverGame.board.isEmptyField(x, y)) {
-      serverGame.board.setField(x, y, getMark());
-      writeOutput(Protocol.Server.NOTIFYMOVE + " " + x + " " + y);
+  public void makeMove(int x, int y) {
+    if (serverGame.checkMove(x, y)) {
+      serverGame.makeMove(x, y, getMark());
+      writeBoth(Protocol.Server.NOTIFYMOVE + " " + curTurnID + " " + x + " " + y);
     } else {
       writeOutput("Wrong Move");
     }
   }
   public void changeTurn() {
-    if (curTurnIn.equals(c1in)) {
+    if (curTurnID == 1) {
       curTurnIn = c2in;
       curTurnOut = c2out;
       curTurnID = 2;
-    } else if (curTurnIn.equals(c2in)) {
+    } else {
       curTurnIn = c1in;
       curTurnOut = c1out;
       curTurnID = 1;

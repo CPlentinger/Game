@@ -19,4 +19,12 @@ public class Controller {
       board.setField(x,y,m);
   }
   
+  public boolean checkMove(int x, int y) {
+    if (board.isEmptyField(x, y)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
 }

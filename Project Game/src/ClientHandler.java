@@ -61,25 +61,25 @@ public class ClientHandler extends Thread implements Observer {
         if (inScanner.nextInt() == id) {
           makeMove();
         } else {
-          System.out.println("Opponents turn");
+          System.out.println("Waiting for opponents turn...");
+        }
+        break;
+      case Protocol.Server.NOTIFYMOVE: 
+        if (inScanner.nextInt() == id) {
+          clientGame.board.setField(inScanner.nextInt(), inScanner.nextInt(), m);
+        } else {
+          clientGame.board.setField(inScanner.nextInt(), inScanner.nextInt(), m.Other(m));
         }
         break;
     }
   }
   
   private void makeMove() {
-    System.out.println(1);
-    String move = view.getResponse("Make your move (i.e.: x y)");
+    System.out.println("Player " + m.toString() + ",");
+    String move = view.getResponse("make your move (i.e.: x y):");
     int x = Integer.parseInt(move.substring(0, 1));
     int y = Integer.parseInt(move.substring(2));
-    writeOutput(Protocol.Client.MAKEMOVE + " " +move);
-    if (confirmMove()) {
-      clientGame.board.setField(x, y, Mark.X);
-      
-    } else {
-      System.out.println("Invalid Move");
-      makeMove();
-    }
+    writeOutput(Protocol.Client.MAKEMOVE + " " + move);
   }
   
   public boolean confirmMove() {
@@ -108,7 +108,6 @@ public class ClientHandler extends Thread implements Observer {
   }
   
   public void startGame(String message) {
-    System.out.println(message);
     Scanner scan = new Scanner(message);
     String playerInfo = "";
     while (scan.hasNext()) {
@@ -116,7 +115,6 @@ public class ClientHandler extends Thread implements Observer {
       if (playerInfo.contains(name)) {
         break;
       }
-      
     }
     id = Integer.valueOf(playerInfo.split("\\|")[0]);
     if (playerInfo.split("\\|")[2].equals("ff0000")) {
@@ -126,6 +124,7 @@ public class ClientHandler extends Thread implements Observer {
     }
     clientGame = new Controller(message.substring(10,15));
     clientGame.board.addObserver(this);
+    view.view(clientGame.board);
   }
 
   @Override
