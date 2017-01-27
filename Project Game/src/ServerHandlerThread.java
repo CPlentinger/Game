@@ -42,6 +42,8 @@ public class ServerHandlerThread extends Thread {
   }
   
   public void run() {
+    while (!client1.isClosed() && !client2.isClosed()) {
+    writeBoth("Starting new game.");
     writeBoth(Protocol.Server.SERVERCAPABILITIES + " 2 0 4 4 4 4 0");
     readInput();
     changeTurn();
@@ -53,9 +55,10 @@ public class ServerHandlerThread extends Thread {
       String endMessage;
       if ((endMessage = serverGame.endGameCheck()) != null) {
         writeBoth(endMessage);
+        break;
       }
     }
-    
+    }
   }
 
   public void readInput() {

@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.Scanner;
 
 public class ClientHandler extends Thread {
@@ -65,13 +62,52 @@ public class ClientHandler extends Thread {
           clientGame.board.setField(inScanner.nextInt(), inScanner.nextInt(), clientGame.getMark().Other());
         }
         break;
+      case Protocol.Server.NOTIFYEND: handleEnd(message);
+        break;
       default: System.out.println(message);
         break;
     }
   }
   
+  private void handleEnd(String endMessage) {
+    String winCode = endMessage.split(" ")[1];
+    if (winCode.equals("1")) {
+      String playerid = endMessage.split(" ")[2];
+      if (playerid.equals(String.valueOf(clientGame.getID()))) {
+        System.out.println(Protocol.getWin("1") + " Congratulations!");
+      } else {
+        System.out.println(Protocol.getWin("1") + " Better luck next time.");
+      }
+    } else if (winCode.equals("2")) {
+      System.out.println(Protocol.getWin("2"));
+    } else if (winCode.equals("3")) {
+      String playerid = endMessage.split(" ")[2];
+      System.out.println(Protocol.getWin("3"));
+      if (playerid.equals(String.valueOf(clientGame.getID()))) {
+        System.out.println("You lost the game. Better luck next time.");
+      }
+    } else if (winCode.equals("4")) {
+      String playerid = endMessage.split(" ")[2];
+      System.out.println(Protocol.getWin("4"));
+      if (playerid.equals(String.valueOf(clientGame.getID()))) {
+        System.out.println("You lost the game. Better luck next time.");
+      } else {
+        System.out.println(Protocol.getWin("1") + " Congratulations!");
+      }
+    } else {
+      System.out.println(Protocol.getWin("unknown"));
+    }
+  }
+
   private void makeMove() {
-    String move = clientGame.getResponse("Player " + clientGame.getName() + " (" + clientGame.getMark().toString() + "), " + "make your move (i.e.: x y):");
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append("Player ");
+    stringBuilder.append(clientGame.getName());
+    stringBuilder.append(" (");
+    stringBuilder.append(clientGame.getMark().toString());
+    stringBuilder.append("), ");
+    stringBuilder.append("make your move (i.e.: x y):");
+    String move = clientGame.getResponse(stringBuilder.toString());
     writeOutput(Protocol.Client.MAKEMOVE + " " + move);
   }
   
