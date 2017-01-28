@@ -6,25 +6,32 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Scanner;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ClientHandler extends Thread {
 
   private Socket server;
   private BufferedReader in;
   private BufferedWriter out;
-  private Controller clientGame;
+  private HumanPlayer clientGame;
+  private String type;
   
-  
-  public ClientHandler(Socket sock) throws IOException {
+  public ClientHandler(Socket sock, String username, String type) throws IOException {
     this.server = sock;
     this.in = new BufferedReader(new InputStreamReader(server.getInputStream()));
     this.out = new BufferedWriter(new OutputStreamWriter(server.getOutputStream()));
-    this.clientGame = new Controller();
-    clientGame.setName(clientGame.getResponse("Choose your username: "));
+    this.type = type;
+    if (type.equals("Computer")) {
+      this.clientGame = new ComputerPlayer();
+    } else {
+      this.clientGame = new HumanPlayer();
+    }
+    this.clientGame.setName(username);
   }
   
-  public void run() {
+  public void run() { 
     readInput();
   }
 
@@ -32,8 +39,10 @@ public class ClientHandler extends Thread {
     String message;
     try {
       while ((message = in.readLine()) != null) {
-            handleInput(message);
+        handleInput(message);
       }
+    } catch (SocketException e) {
+      handleEnd(Protocol.Server.NOTIFYEND + " 4 " + clientGame.getID());
     } catch (IOException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -44,7 +53,7 @@ public class ClientHandler extends Thread {
     Scanner inScanner = new Scanner(message);
     switch (inScanner.next()) {
       case Protocol.Server.SERVERCAPABILITIES:
-        writeOutput(Protocol.Client.SENDCAPABILITIES + clientGame.getName() + " 0 4 4 4 4 0 0");
+        writeOutput(Protocol.Client.SENDCAPABILITIES + " 2 " + clientGame.getName() + " 0 4 4 4 4 0 0");
         break;
       case Protocol.Server.STARTGAME: startGame(message);
         break;
@@ -57,18 +66,20 @@ public class ClientHandler extends Thread {
         break;
       case Protocol.Server.NOTIFYMOVE: 
         if (inScanner.nextInt() == clientGame.getID()) {
-          clientGame.board.setField(inScanner.nextInt(), inScanner.nextInt(), clientGame.getMark());
+          clientGame.makeMove(inScanner.nextInt(), inScanner.nextInt(), clientGame.getMark());
         } else {
-          clientGame.board.setField(inScanner.nextInt(), inScanner.nextInt(), clientGame.getMark().Other());
+          clientGame.makeMove(inScanner.nextInt(), inScanner.nextInt(), clientGame.getMark().Other());
         }
         break;
-      case Protocol.Server.NOTIFYEND: handleEnd(message);
+      case Protocol.Server.NOTIFYEND:
+        handleEnd(message);
         break;
       default: System.out.println(message);
         break;
     }
+    inScanner.close();
   }
-  
+
   private void handleEnd(String endMessage) {
     String winCode = endMessage.split(" ")[1];
     if (winCode.equals("1")) {
@@ -88,7 +99,7 @@ public class ClientHandler extends Thread {
       }
     } else if (winCode.equals("4")) {
       String playerid = endMessage.split(" ")[2];
-      System.out.println(Protocol.getWin("4"));
+      System.out.println("\n" + Protocol.getWin("4"));
       if (playerid.equals(String.valueOf(clientGame.getID()))) {
         System.out.println("You lost the game. Better luck next time.");
       } else {
@@ -96,6 +107,18 @@ public class ClientHandler extends Thread {
       }
     } else {
       System.out.println(Protocol.getWin("unknown"));
+    }
+    String nextGame = clientGame.getResponse("Do you want to play another game? (y/n)");
+    if (nextGame.equals("y")) {
+      try {
+        new ClientHandler(new Socket(server.getInetAddress(), server.getPort()),clientGame.getName(), type).start();
+        this.interrupt();
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    } else {
+      writeOutput(Protocol.Server.NOTIFYEND + " 3 " + clientGame.getID());
     }
   }
 
@@ -107,8 +130,7 @@ public class ClientHandler extends Thread {
     stringBuilder.append(clientGame.getMark().toString());
     stringBuilder.append("), ");
     stringBuilder.append("make your move (i.e.: x y):");
-    String move = clientGame.getResponse(stringBuilder.toString());
-    writeOutput(Protocol.Client.MAKEMOVE + " " + move);
+    writeOutput(Protocol.Client.MAKEMOVE + " " + clientGame.getResponse(stringBuilder.toString()));
   }
   
   public boolean confirmMove() {
@@ -126,12 +148,14 @@ public class ClientHandler extends Thread {
     }
   }
   public void writeOutput(String message) {
+      System.out.println(message);
       try {
         out.write(message);
         out.newLine();
         out.flush();
+      } catch (SocketException e) {
+        handleEnd(Protocol.Server.NOTIFYEND + " 4 " + clientGame.getID());
       } catch (IOException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
       }
   }

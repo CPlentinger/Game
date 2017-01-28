@@ -3,7 +3,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Scanner;
 
-public class Controller implements Observer {
+public class HumanPlayer implements Observer {
   
   public Board board;
   public TUIView view;
@@ -11,7 +11,7 @@ public class Controller implements Observer {
   public int ID;
   public Mark mark;
   
-  public Controller() {
+  public HumanPlayer() {
     this.view = new TUIView();
   }
   
@@ -89,8 +89,4 @@ public class Controller implements Observer {
   public void update(Observable arg0, Object arg1) {
     view.createView(board);
   }
-  
-  
-  
-  
 }

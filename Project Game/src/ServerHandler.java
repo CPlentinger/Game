@@ -6,89 +6,95 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.StringJoiner;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class ServerHandlerThread extends Thread {
+public class ServerHandler extends Thread {
 
   private Socket client1;
   private Socket client2;
   private String capabilitiesC1;
   private String capabilitiesC2;
-  private BufferedReader c1in;
-  private BufferedWriter c1out;
-  private BufferedReader c2in;
-  private BufferedWriter c2out;
-  private BufferedReader curTurnIn;
-  private BufferedWriter curTurnOut;
+  private BufferedReader in;
+  private BufferedWriter out;
   private int curTurnID;
   private String gameCapabilities;
-  private Controller serverGame;
+  private HumanPlayer serverGame;
+  private boolean timeout;
   
-  public ServerHandlerThread(Socket sock1, Socket sock2) throws IOException {
+  public ServerHandler(Socket sock1, Socket sock2) throws IOException {
     this.client1 = sock1;
     this.client2 = sock2;
-    this.c1in = new BufferedReader(new InputStreamReader(client1.getInputStream()));
-    this.c1out = new BufferedWriter(new OutputStreamWriter(client1.getOutputStream()));
-    this.c2in = new BufferedReader(new InputStreamReader(client2.getInputStream()));
-    this.c2out = new BufferedWriter(new OutputStreamWriter(client2.getOutputStream()));
-    this.curTurnIn = c1in;
-    this.curTurnOut = c1out;
+    this.in = new BufferedReader(new InputStreamReader(client1.getInputStream()));
+    this.out = new BufferedWriter(new OutputStreamWriter(client1.getOutputStream()));
     this.curTurnID = 1;
+    this.timeout = false;
   }
   
   public void run() {
-    while (!client1.isClosed() && !client2.isClosed()) {
-    writeBoth("Starting new game.");
     writeBoth(Protocol.Server.SERVERCAPABILITIES + " 2 0 4 4 4 4 0");
     readInput();
-    changeTurn();
-    readInput();
-    startGame();
-    while (true) {
+    while (!client1.isClosed() || !client2.isClosed()) {
       writeBoth(Protocol.Server.TURNOFPLAYER + " " + curTurnID);
       readInput();
       String endMessage;
       if ((endMessage = serverGame.endGameCheck()) != null) {
         writeBoth(endMessage);
-        break;
+        shutdown();
       }
-    }
+      if (timeout) {
+        shutdown();
+      }
     }
   }
 
   public void readInput() {
     String clientInput;
     try {
-      while ((clientInput = curTurnIn.readLine()) != null) {
+      while ((clientInput = in.readLine()) != null) {
         handleInput(clientInput);
         break;
       }
+    } catch (SocketTimeoutException e) {
+      writeBoth(Protocol.Server.NOTIFYEND + " 4 " + curTurnID);
+      timeout = true;
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
-  
-  public void handleInput(String input) throws IOException {
+
+  private void shutdown() {
+    try {
+      client1.close();
+      client2.close();
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
+  public void handleInput(String input) {
       Scanner inScanner = new Scanner(input);
       switch (inScanner.next()) {
-        case "sendCapabilities": handleCapabilities(input);
+        case Protocol.Client.SENDCAPABILITIES: handleCapabilities(input);
+        break;
+        case Protocol.Client.MAKEMOVE:         makeMove(inScanner.nextInt(), inScanner.nextInt());
                                  break;
-        case "makeMove":         makeMove(inScanner.nextInt(), inScanner.nextInt());
-                                 break;
+        case Protocol.Server.NOTIFYEND: writeOutput("Game ended, thanks for playing!");
+                                        break;
       }
       inScanner.close();
   }
   
   public void writeOutput(String message) {
     try {
-      curTurnOut.write(message);
-      curTurnOut.newLine();
-      curTurnOut.flush();
+      out.write(message);
+      out.newLine();
+      out.flush();
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -96,12 +102,14 @@ public class ServerHandlerThread extends Thread {
   
   public void writeBoth(String message) {
     try {
-      c1out.write(message);
-      c1out.newLine();
-      c1out.flush();
-      c2out.write(message);
-      c2out.newLine();
-      c2out.flush();
+      out.write(message);
+      out.newLine();
+      out.flush();
+      changeTurn();
+      out.write(message);
+      out.newLine();
+      out.flush();
+      changeTurn();
       
     } catch (IOException e) {
       e.printStackTrace();
@@ -109,8 +117,9 @@ public class ServerHandlerThread extends Thread {
   }
   
   public void handleCapabilities(String capabilities) {
-    if (curTurnIn.equals(c1in)) {
+    if (curTurnID == 1) {
       capabilitiesC1 = capabilities.substring(16);
+      changeTurn();
     } else {
       capabilitiesC2 = capabilities.substring(16);
       Scanner C1 = new Scanner(capabilitiesC1);
@@ -128,16 +137,33 @@ public class ServerHandlerThread extends Thread {
       int chatSupport = Math.min(C1.nextInt(), C2.nextInt());
       int autoRefresh = Math.min(C1.nextInt(), C2.nextInt());
       StringJoiner joiner = new StringJoiner("|");
-      joiner.add(" " + maxRoomDimensionX).add(String.valueOf(maxRoomDimensionY)).add(String.valueOf(maxRoomDimensionZ)).add(lengthToWin + " " + p1ID).add(p1Name).add("0000ff 2").add(p2Name).add("ff0000");
+      joiner.add(" " + maxRoomDimensionX);
+      joiner.add(String.valueOf(maxRoomDimensionY));
+      joiner.add(String.valueOf(maxRoomDimensionZ));
+      joiner.add(lengthToWin + " " + p1ID);
+      joiner.add(p1Name);
+      joiner.add("0000ff 2");
+      joiner.add(p2Name);
+      joiner.add("ff0000");
       gameCapabilities = joiner.toString();
+      C1.close();
+      C2.close();
+      startGame(gameCapabilities);
     }
   }
   
-  public void startGame() {
+  public void startGame(String gameCapabilities) {
+    writeBoth("Starting new game.");
     writeBoth(Protocol.Server.STARTGAME + gameCapabilities);
-    serverGame = new Controller();
+    serverGame = new HumanPlayer();
     serverGame.buildBoard(gameCapabilities.substring(1, 6));
-    changeTurn();
+    try {
+      client1.setSoTimeout(120000);
+      client2.setSoTimeout(120000);
+    } catch (SocketException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
   
   public Mark getMark() {
@@ -161,12 +187,20 @@ public class ServerHandlerThread extends Thread {
   }
   public void changeTurn() {
     if (curTurnID == 1) {
-      curTurnIn = c2in;
-      curTurnOut = c2out;
+      try {
+        in = new BufferedReader(new InputStreamReader(client2.getInputStream()));
+        out = new BufferedWriter(new OutputStreamWriter(client2.getOutputStream()));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
       curTurnID = 2;
     } else {
-      curTurnIn = c1in;
-      curTurnOut = c1out;
+      try {
+      in = new BufferedReader(new InputStreamReader(client1.getInputStream()));
+      out = new BufferedWriter(new OutputStreamWriter(client1.getOutputStream()));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
       curTurnID = 1;
     }
   }

@@ -10,9 +10,9 @@ public class Board extends Observable {
   public Board(int dim) {
     this.dim = dim;
     fields = new Mark[dim][dim][dim];
-    for (int i = 0; i < fields.length; i++) {
-      for (int j = 0; j < fields[i].length; j++) {
-        for (int k = 0; k < fields[i][j].length; k++) {
+    for (int i = 0; i < dim; i++) {
+      for (int j = 0; j < dim; j++) {
+        for (int k = 0; k < dim; k++) {
           fields[i][j][k] = Mark.E;
         }
       }
@@ -21,16 +21,22 @@ public class Board extends Observable {
   
   public Board deepCopy() {
     Board result = new Board(dim);
-    result.fields = this.fields;
+    for (int i = 0; i < dim; i++) {
+      for (int j = 0; j < dim; j++) {
+        for (int k = 0; k < dim; k++) {
+          result.fields[i][j][k] = this.fields[i][j][k];  
+        }
+      }
+    }
     return result;
   }
   
   public boolean isField(int x, int y, int z) {
-    return x >= 0 && x <= dim && y >= 0 && y <= dim && z >= 0 && z <= dim;
+    return x >= 0 && x < dim && y >= 0 && y < dim && z >= 0 && z < dim;
   }
   
   public boolean isField(int x, int y) {
-    return x >= 0 && x <= dim && y >= 0 && y <= dim;
+    return x >= 0 && x < dim && y >= 0 && y < dim;
   }
   
   public boolean isEmptyField(int x, int y, int z) {

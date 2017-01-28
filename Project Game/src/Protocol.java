@@ -39,7 +39,7 @@ public class Protocol {
    */
   public static class Client {
 
-    public static final String SENDCAPABILITIES = "sendCapabilities 2 ";
+    public static final String SENDCAPABILITIES = "sendCapabilities";
 
     public static final String JOINROOM = "joinRoom";
 

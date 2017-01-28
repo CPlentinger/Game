@@ -85,14 +85,14 @@ public class TUIView {
     System.out.print(question);
     String result = null;
     try {
-        result = in.readLine();
+      result = in.readLine();
     } catch (IOException e) {
+      
     }
-
     if (result != null) {
       return result;
     } else {
-      return null;
+      return "";
     }
   }
 }
