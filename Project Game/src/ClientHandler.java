@@ -1,5 +1,3 @@
-
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -15,23 +13,20 @@ public class ClientHandler extends Thread {
   private Socket server;
   private BufferedReader in;
   private BufferedWriter out;
-  private HumanPlayer clientGame;
-  private String type;
+  private Player player;
+  private Player hintBot;
   
-  public ClientHandler(Socket sock, String username, String type) throws IOException {
+  public ClientHandler(Socket sock, String username, Player p) throws IOException {
     this.server = sock;
     this.in = new BufferedReader(new InputStreamReader(server.getInputStream()));
     this.out = new BufferedWriter(new OutputStreamWriter(server.getOutputStream()));
-    this.type = type;
-    if (type.equals("Computer")) {
-      this.clientGame = new ComputerPlayer();
-    } else {
-      this.clientGame = new HumanPlayer();
-    }
-    this.clientGame.setName(username);
+    this.player = p;
+    player.setName(username);
+    this.hintBot = new ComputerPlayer(1);
   }
   
-  public void run() { 
+  public void run() {
+    System.out.println("Waiting for opponent...");
     readInput();
   }
 
@@ -42,9 +37,8 @@ public class ClientHandler extends Thread {
         handleInput(message);
       }
     } catch (SocketException e) {
-      handleEnd(Protocol.Server.NOTIFYEND + " 4 " + clientGame.getID());
+      handleEnd(Protocol.Server.NOTIFYEND + " 4 " + player.getID());
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
   }
@@ -53,23 +47,23 @@ public class ClientHandler extends Thread {
     Scanner inScanner = new Scanner(message);
     switch (inScanner.next()) {
       case Protocol.Server.SERVERCAPABILITIES:
-        writeOutput(Protocol.Client.SENDCAPABILITIES + " 2 " + clientGame.getName() + " 0 4 4 4 4 0 0");
+        writeOutput(Protocol.Client.SENDCAPABILITIES + " 2 " + player.getName() + " 0 4 4 4 4 0 0");
+        break;
+      case Protocol.Server.ASSIGNID:
+        player.setID(inScanner.nextInt());
+        hintBot.setID(player.getID());
         break;
       case Protocol.Server.STARTGAME: startGame(message);
         break;
       case Protocol.Server.TURNOFPLAYER:
-        if (inScanner.nextInt() == clientGame.getID()) {
-          makeMove();
+        if (inScanner.nextInt() == player.getID()) {
+          askMove();
         } else {
-          System.out.println("Waiting for opponents turn...");
+          System.out.println("Waiting for player " + player.getOpponentName() + " (" + player.getMark().Other().toString() + ")...");
         }
         break;
       case Protocol.Server.NOTIFYMOVE: 
-        if (inScanner.nextInt() == clientGame.getID()) {
-          clientGame.makeMove(inScanner.nextInt(), inScanner.nextInt(), clientGame.getMark());
-        } else {
-          clientGame.makeMove(inScanner.nextInt(), inScanner.nextInt(), clientGame.getMark().Other());
-        }
+        setMove(message);
         break;
       case Protocol.Server.NOTIFYEND:
         handleEnd(message);
@@ -82,99 +76,113 @@ public class ClientHandler extends Thread {
 
   private void handleEnd(String endMessage) {
     String winCode = endMessage.split(" ")[1];
-    if (winCode.equals("1")) {
-      String playerid = endMessage.split(" ")[2];
-      if (playerid.equals(String.valueOf(clientGame.getID()))) {
-        System.out.println(Protocol.getWin("1") + " Congratulations!");
-      } else {
-        System.out.println(Protocol.getWin("1") + " Better luck next time.");
-      }
-    } else if (winCode.equals("2")) {
-      System.out.println(Protocol.getWin("2"));
-    } else if (winCode.equals("3")) {
-      String playerid = endMessage.split(" ")[2];
-      System.out.println(Protocol.getWin("3"));
-      if (playerid.equals(String.valueOf(clientGame.getID()))) {
-        System.out.println("You lost the game. Better luck next time.");
-      }
-    } else if (winCode.equals("4")) {
-      String playerid = endMessage.split(" ")[2];
-      System.out.println("\n" + Protocol.getWin("4"));
-      if (playerid.equals(String.valueOf(clientGame.getID()))) {
-        System.out.println("You lost the game. Better luck next time.");
-      } else {
-        System.out.println(Protocol.getWin("1") + " Congratulations!");
-      }
-    } else {
-      System.out.println(Protocol.getWin("unknown"));
+    String playerid = endMessage.split(" ")[2];
+    switch (winCode) {
+      case "1":
+        if (playerid.equals(String.valueOf(player.getID()))) {
+          System.out.println(Protocol.getWin("1") + " Congratulations " + player.getName() + "!");
+        } else {
+          System.out.println("You lost the game. Better luck next time.");
+        }
+        break;
+      case "2":
+        System.out.println(Protocol.getWin("2"));
+        break;
+      case "3":
+        System.out.println(Protocol.getWin("3"));
+        if (playerid.equals(String.valueOf(player.getID()))) {
+          System.out.println("You lost the game. Better luck next time.");
+        } else {
+          System.out.println(Protocol.getWin("1") + " Congratulations " + player.getOpponentName() + "!");
+        }
+        break;
+      case "4":
+        System.out.println("\n" + Protocol.getWin("4"));
+        if (playerid.equals(String.valueOf(player.getID()))) {
+          System.out.println("You lost the game. Better luck next time.");
+        } else {
+          System.out.println(Protocol.getWin("1") + " Congratulations " + player.getOpponentName() + "!");
+        }
+      default: break;
     }
-    String nextGame = clientGame.getResponse("Do you want to play another game? (y/n)");
+    String nextGame = player.getMove("Do you want to play another game? (y/n)");
     if (nextGame.equals("y")) {
       try {
-        new ClientHandler(new Socket(server.getInetAddress(), server.getPort()),clientGame.getName(), type).start();
-        this.interrupt();
+        new ClientHandler(new Socket(server.getInetAddress(), server.getPort()),player.getName(), player).start();
       } catch (IOException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
       }
     } else {
-      writeOutput(Protocol.Server.NOTIFYEND + " 3 " + clientGame.getID());
+      System.out.println("Game ended, thanks for playing!");
+      System.exit(0);
     }
   }
 
-  private void makeMove() {
+  private void askMove() {
+    if (player instanceof HumanPlayer) {
+      hintBot.getController().setBoard(player.getController().getBoard());
+      System.out.println(hintBot.getMove("hint: "));
+    }
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("Player ");
-    stringBuilder.append(clientGame.getName());
+    stringBuilder.append(player.getName());
     stringBuilder.append(" (");
-    stringBuilder.append(clientGame.getMark().toString());
+    stringBuilder.append(player.getMark().toString());
     stringBuilder.append("), ");
     stringBuilder.append("make your move (i.e.: x y):");
-    writeOutput(Protocol.Client.MAKEMOVE + " " + clientGame.getResponse(stringBuilder.toString()));
+    String move = player.getMove(stringBuilder.toString());
+    if (player instanceof ComputerPlayer) {
+      System.out.print(move);
+    }
+    int xpos = Integer.parseInt(move.substring(0,1));
+    int ypos = Integer.parseInt(move.substring(2));
+    if (player.checkMove(xpos, ypos)) {
+      writeOutput(Protocol.Client.MAKEMOVE + " " + move);
+    } else {
+      System.out.println("Please choose a empty field on the board!");
+      askMove();
+    }
+    
   }
   
-  public boolean confirmMove() {
-    String message = "";
-    try {
-      message = in.readLine();
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    if (message.startsWith(Protocol.Server.NOTIFYMOVE)) {
-      return true;
+  public void setMove(String message) {
+    int xpos = Integer.parseInt(message.split(" ")[2]);
+    int ypos = Integer.parseInt(message.split(" ")[3]);
+    if (message.split(" ")[1].equals(String.valueOf(player.getID()))) {
+      player.makeMove(xpos, ypos, player.getMark());
     } else {
-      return false;
+      player.makeMove(xpos, ypos, player.getMark().Other());
     }
   }
+  
   public void writeOutput(String message) {
-      System.out.println(message);
       try {
         out.write(message);
         out.newLine();
         out.flush();
       } catch (SocketException e) {
-        handleEnd(Protocol.Server.NOTIFYEND + " 4 " + clientGame.getID());
+        handleEnd(Protocol.Server.NOTIFYEND + " 4 " + player.getID());
       } catch (IOException e) {
         e.printStackTrace();
       }
   }
   
   public void startGame(String message) {
-    Scanner scan = new Scanner(message);
-    String playerInfo = "";
-    while (scan.hasNext()) {
-      playerInfo = scan.next();
-      if (playerInfo.contains(clientGame.getName())) {
-        break;
+    System.out.println("Starting new game.");
+    String[] players = message.substring(18).split(" ");
+    for (String playerInfo : players) {
+      if (playerInfo.startsWith(String.valueOf(player.getID()))) {
+        if (playerInfo.split("\\|")[2].equals("ff0000")) {
+          player.setMark(Mark.X);
+          hintBot.setMark(Mark.X);
+        } else {
+          player.setMark(Mark.O);
+          hintBot.setMark(Mark.O);
+        }
+      } else {
+        player.setOpponentName(playerInfo.split("\\|")[1]);
       }
     }
-    clientGame.setID(Integer.valueOf(playerInfo.split("\\|")[0]));
-    if (playerInfo.split("\\|")[2].equals("ff0000")) {
-      clientGame.setMark(Mark.X);
-    } else {
-      clientGame.setMark(Mark.O);
-    }
-    clientGame.buildBoard(message.substring(10,15));
+    player.buildBoard(message.substring(10,15));
   }
 }

@@ -79,20 +79,4 @@ public class TUIView {
     result += "\n";
     return result;
   }
-  
-  public String getResponse(String question) {
-    BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-    System.out.print(question);
-    String result = null;
-    try {
-      result = in.readLine();
-    } catch (IOException e) {
-      
-    }
-    if (result != null) {
-      return result;
-    } else {
-      return "";
-    }
-  }
 }

@@ -226,6 +226,7 @@ public class Board extends Observable {
   public boolean hasWinner() {
     return isWinner(Mark.O) || isWinner(Mark.X);
   }
+  
   public boolean isFull() {
     for (int z = 0; z < dim; z++) {
       for (int y = 0; y < dim; y++) {

@@ -38,13 +38,16 @@ public class Client {
     System.out.print("Do you want to start the computer player? (y/n)");
     String player = in.readLine();
     
-    System.out.println("Connecting to:" + adrs + ":" + port);
+    
     if (player.equals("y")) {
-      
-      ClientHandler client = new ClientHandler(new Socket(adrs, port), username, "Computer");
+      System.out.print("Choose a maximum thinking time in seconds: ");
+      double time = Double.parseDouble(in.readLine());
+      System.out.println("Connecting to:" + adrs + ":" + port);
+      ClientHandler client = new ClientHandler(new Socket(adrs, port), username, new ComputerPlayer(time));
       client.start();
     } else {
-      ClientHandler client = new ClientHandler(new Socket(adrs, port), username, "Human");
+      System.out.println("Connecting to:" + adrs + ":" + port);
+      ClientHandler client = new ClientHandler(new Socket(adrs, port), username, new HumanPlayer());
       client.start();
     }
     
