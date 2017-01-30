@@ -1,4 +1,5 @@
-import java.util.Arrays;
+package project.game;
+
 import java.util.Observable;
 
 public class Board extends Observable {

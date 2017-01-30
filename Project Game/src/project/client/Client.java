@@ -1,3 +1,4 @@
+package project.client;
 
 
 import java.io.BufferedReader;
@@ -8,6 +9,9 @@ import java.net.InetAddress;
 import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+
+import project.game.ComputerPlayer;
+import project.game.HumanPlayer;
 
 public class Client {
   private static final String USAGE = "Usage: <address> <port>";

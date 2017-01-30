@@ -1,3 +1,4 @@
+package project.game;
 import java.io.Serializable;
 
 public class HumanPlayer extends Player {

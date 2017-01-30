@@ -1,3 +1,4 @@
+package project.game;
 public class ComputerPlayer extends Player {
   
   private int thinkingTime;

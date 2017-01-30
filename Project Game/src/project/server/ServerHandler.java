@@ -1,3 +1,4 @@
+package project.server;
 
 
 import java.io.BufferedReader;
@@ -15,6 +16,13 @@ import java.util.StringJoiner;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import project.game.Controller;
+import project.game.HumanPlayer;
+import project.game.Mark;
+import project.game.Player;
+import project.server.Protocol.Client;
+import project.server.Protocol.Server;
+
 public class ServerHandler extends Thread {
   private Socket client1;
   private Socket client2;
@@ -25,7 +33,7 @@ public class ServerHandler extends Thread {
   private BufferedWriter out;
   private int curTurnID;
   private int curStreams;
-  private Controller serverGame;
+  private Player serverGame;
   private boolean gameEnd;
   
   public ServerHandler(Socket sock1, Socket sock2, String capabilities) throws IOException {
@@ -55,7 +63,7 @@ public class ServerHandler extends Thread {
     }
   }
 
-  public void readInput() {
+  private void readInput() {
     String clientInput;
     try {
       if ((clientInput = in.readLine()) != null) {
@@ -84,7 +92,7 @@ public class ServerHandler extends Thread {
     }
   }
 
-  public void handleInput(String input) {
+  private void handleInput(String input) {
       Scanner inScanner = new Scanner(input);
       switch (inScanner.next()) {
         case Protocol.Client.MAKEMOVE:
@@ -94,7 +102,7 @@ public class ServerHandler extends Thread {
       inScanner.close();
   }
   
-  public void writeOutput(String message) {
+  private void writeOutput(String message) {
     try {
       out.write(message);
       out.newLine();
@@ -109,17 +117,17 @@ public class ServerHandler extends Thread {
     }
   }
   
-  public void writeBoth(String message) {
+  private void writeBoth(String message) {
     writeOutput(message);
     changeStreams();
     writeOutput(message);
     changeStreams();
   }
   
-  public void startGame(String gameCapabilities) {
+  private void startGame(String gameCapabilities) {
     System.out.println("Starting new game.");
     writeBoth(gameCapabilities);
-    serverGame = new Controller();
+    serverGame = new HumanPlayer();
     serverGame.buildBoard(gameCapabilities.substring(10, 15));
     try {
       client1.setSoTimeout(120000);
@@ -130,7 +138,7 @@ public class ServerHandler extends Thread {
     }
   }
   
-  public Mark getMark() {
+  private Mark getMark() {
     if (curTurnID == c1ID) {
       return Mark.O;
     } else {
@@ -139,7 +147,7 @@ public class ServerHandler extends Thread {
   }
   
   
-  public void makeMove(int x, int y) {
+  private void makeMove(int x, int y) {
     if (serverGame.checkMove(x, y)) {
       serverGame.makeMove(x, y, getMark());
       writeBoth(Protocol.Server.NOTIFYMOVE + " " + curTurnID + " " + x + " " + y);
@@ -154,7 +162,7 @@ public class ServerHandler extends Thread {
     }
   }
   
-  public void changeStreams() {
+  private void changeStreams() {
     if (curStreams == c1ID) {
       try {
         in = new BufferedReader(new InputStreamReader(client2.getInputStream()));
@@ -174,7 +182,7 @@ public class ServerHandler extends Thread {
     }
   }
   
-  public void changeTurn() {
+  private void changeTurn() {
     if (curTurnID == c1ID) {
       curTurnID = c2ID;
       System.out.println("Changed turn to: Player " + curTurnID);

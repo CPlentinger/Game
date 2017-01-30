@@ -1,9 +1,11 @@
+package project.game;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 
-public abstract class Player implements Cloneable {
+public abstract class Player {
   
   private String name;
   private String opponentName;
@@ -66,6 +68,10 @@ public abstract class Player implements Cloneable {
   
   public boolean checkMove(int x, int y) {
     return controller.checkMove(x, y);
+  }
+  
+  public String endGameCheck(int id) {
+    return controller.endGameCheck(id);
   }
   
   public String getInput(String question) {

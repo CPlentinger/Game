@@ -1,3 +1,4 @@
+package project.client;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -8,6 +9,12 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Scanner;
 
+import project.game.ComputerPlayer;
+import project.game.HumanPlayer;
+import project.game.Mark;
+import project.game.Player;
+import project.server.Protocol;
+
 public class ClientHandler extends Thread {
 
   private Socket server;
@@ -15,6 +22,7 @@ public class ClientHandler extends Thread {
   private BufferedWriter out;
   private Player player;
   private Player hintBot;
+  private boolean gameOver;
   
   public ClientHandler(Socket sock, String username, Player p) throws IOException {
     this.server = sock;
@@ -23,6 +31,7 @@ public class ClientHandler extends Thread {
     this.player = p;
     player.setName(username);
     this.hintBot = new ComputerPlayer(1);
+    this.gameOver = false;
   }
   
   public void run() {
@@ -30,11 +39,14 @@ public class ClientHandler extends Thread {
     readInput();
   }
 
-  public void readInput() {
+  private void readInput() {
     String message;
     try {
-      while (!(message = in.readLine()).isEmpty()) {
+      while ((message = in.readLine()) != null) {
         handleInput(message);
+        if (gameOver) {
+          break;
+        }
       }
     } catch (NullPointerException e) {
       handleEnd(Protocol.Server.NOTIFYEND + " 3 ");
@@ -45,7 +57,7 @@ public class ClientHandler extends Thread {
     }
   }
   
-  public void handleInput(String message) {
+  private void handleInput(String message) {
     Scanner inScanner = new Scanner(message);
     switch (inScanner.next()) {
       case Protocol.Server.SERVERCAPABILITIES:
@@ -114,6 +126,7 @@ public class ClientHandler extends Thread {
     if (nextGame.equals("y")) {
       try {
         new ClientHandler(new Socket(server.getInetAddress(), server.getPort()),player.getName(), player).start();
+        shutdown();
       } catch (ConnectException e) {
         System.out.println("Couldn't connect to the server.");
       } catch (IOException e) {
@@ -121,7 +134,16 @@ public class ClientHandler extends Thread {
       }
     } else {
       System.out.println("Game ended, thanks for playing!");
-      System.exit(0);
+    }
+  }
+
+  private void shutdown() {
+    try {
+      server.close();
+      gameOver = true;
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 
@@ -159,7 +181,7 @@ public class ClientHandler extends Thread {
     
   }
   
-  public void setMove(String message) {
+  private void setMove(String message) {
     int xpos = Integer.parseInt(message.split(" ")[2]);
     int ypos = Integer.parseInt(message.split(" ")[3]);
     if (message.split(" ")[1].equals(String.valueOf(player.getID()))) {
@@ -169,7 +191,7 @@ public class ClientHandler extends Thread {
     }
   }
   
-  public void writeOutput(String message) {
+  private void writeOutput(String message) {
       try {
         out.write(message);
         out.newLine();
@@ -181,7 +203,7 @@ public class ClientHandler extends Thread {
       }
   }
   
-  public void startGame(String message) {
+  private void startGame(String message) {
     System.out.println("Starting new game.");
     String[] players = message.substring(18).split(" ");
     for (String playerInfo : players) {

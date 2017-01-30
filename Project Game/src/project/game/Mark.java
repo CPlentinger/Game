@@ -1,3 +1,5 @@
+package project.game;
+
 
 public enum Mark {
 	E, O, X;

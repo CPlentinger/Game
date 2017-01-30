@@ -1,7 +1,12 @@
+package project.game;
+
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Scanner;
+
+import project.server.Protocol;
+import project.server.Protocol.Server;
 
 public class Controller implements Observer {
   

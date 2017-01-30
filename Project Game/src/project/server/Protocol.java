@@ -1,3 +1,4 @@
+package project.server;
 
 /**
  * The Class Protocol implements the protocol and provides functions to help implementing
