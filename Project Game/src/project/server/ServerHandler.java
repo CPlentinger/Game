@@ -16,7 +16,6 @@ import java.util.StringJoiner;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import project.game.Controller;
 import project.game.HumanPlayer;
 import project.game.Mark;
 import project.game.Player;
@@ -149,7 +148,7 @@ public class ServerHandler extends Thread {
   
   private void makeMove(int x, int y) {
     if (serverGame.checkMove(x, y)) {
-      serverGame.makeMove(x, y, getMark());
+      serverGame.setField(x, y, getMark());
       writeBoth(Protocol.Server.NOTIFYMOVE + " " + curTurnID + " " + x + " " + y);
       String endMessage;
       if ((endMessage = serverGame.endGameCheck(curTurnID)) != null) {

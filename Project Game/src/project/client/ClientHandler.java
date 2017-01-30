@@ -122,7 +122,7 @@ public class ClientHandler extends Thread {
         }
       default: break;
     }
-    String nextGame = player.getMove("Do you want to play another game? (y/n)");
+    String nextGame = player.makeMove("Do you want to play another game? (y/n)");
     if (nextGame.equals("y")) {
       try {
         new ClientHandler(new Socket(server.getInetAddress(), server.getPort()),player.getName(), player).start();
@@ -149,8 +149,8 @@ public class ClientHandler extends Thread {
 
   private void askMove() {
     if (player instanceof HumanPlayer) {
-      hintBot.getController().setBoard(player.getController().getBoard());
-      System.out.println(hintBot.getMove("hint: "));
+      hintBot.setBoard(player.getBoard());
+      System.out.println(hintBot.makeMove("hint: "));
     }
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("Player ");
@@ -159,9 +159,9 @@ public class ClientHandler extends Thread {
     stringBuilder.append(player.getMark().toString());
     stringBuilder.append("), ");
     stringBuilder.append("make your move (i.e.: x y):");
-    String move = player.getMove(stringBuilder.toString());
+    String move = player.makeMove(stringBuilder.toString());
     if (player instanceof ComputerPlayer) {
-      System.out.print(move);
+      System.out.println(move);
     }
     int xpos = 0;
     int ypos = 0;
@@ -185,9 +185,9 @@ public class ClientHandler extends Thread {
     int xpos = Integer.parseInt(message.split(" ")[2]);
     int ypos = Integer.parseInt(message.split(" ")[3]);
     if (message.split(" ")[1].equals(String.valueOf(player.getID()))) {
-      player.makeMove(xpos, ypos, player.getMark());
+      player.setField(xpos, ypos, player.getMark());
     } else {
-      player.makeMove(xpos, ypos, player.getMark().Other());
+      player.setField(xpos, ypos, player.getMark().Other());
     }
   }
   

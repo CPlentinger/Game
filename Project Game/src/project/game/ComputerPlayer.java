@@ -1,19 +1,20 @@
 package project.game;
+
 public class ComputerPlayer extends Player {
   
   private int thinkingTime;
-  
   
   public ComputerPlayer(double time) {
     super();
     this.thinkingTime = (int) (time * 1000);
   }
   
-  public String getMove(String question) {
-    System.out.print(question);    
+  @Override
+  public String makeMove(String question) {
+    System.out.print(question);
     long startTime = System.currentTimeMillis();
     if (question.contains("make your move") || question.equals("hint: ")) {
-      Board copy = controller.deepCopy();
+      Board copy = deepCopy();
       winMoveCheck:
       for (int z = 0; z < copy.dim; z++) {
         for (int x = 0; x < copy.dim; x++) {
@@ -42,7 +43,7 @@ public class ComputerPlayer extends Player {
   }
   
   public String randomMove() {
-    Board copy = controller.deepCopy();
+    Board copy = deepCopy();
     int xpos = (int) Math.round(Math.random() * copy.dim);
     int ypos = (int) Math.round(Math.random() * copy.dim);
     while (!copy.isEmptyField(xpos, ypos)) {

@@ -1,5 +1,4 @@
 package project.game;
-import java.io.Serializable;
 
 public class HumanPlayer extends Player {
   
@@ -7,8 +6,9 @@ public class HumanPlayer extends Player {
     super();
   }
   
-  public String getMove(String question) {
-    System.out.print(question);
+
+  @Override
+  public String makeMove(String question) {
     return getInput(question);
   }
   

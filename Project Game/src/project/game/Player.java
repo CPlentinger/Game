@@ -3,27 +3,23 @@ package project.game;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Serializable;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Scanner;
 
-public abstract class Player {
+import project.server.Protocol;
+
+public abstract class Player implements Observer {
   
   private String name;
   private String opponentName;
   private int ID;
   private Mark mark;
-  protected Controller controller;
-  
+  private Board board;
+  private TUIView view;
   
   public Player() {
-    this.controller = new Controller();
-  }
-  
-  public Controller getController() {
-    return controller;
-  }
-  
-  public void setController(Controller c) {
-    this.controller = c;
+    this.view = new TUIView();
   }
   
   public void setName(String pName) {
@@ -42,6 +38,14 @@ public abstract class Player {
     this.mark = m;
   }
   
+  public void setField(int x, int y, Mark m) {
+    board.setField(x, y, m);
+  }
+  
+  public void setBoard(Board b) {
+    this.board = b;
+  }
+  
   public String getName() {
     return name;
   }
@@ -57,24 +61,54 @@ public abstract class Player {
   public Mark getMark() {
     return mark;
   }
+
+  public Board getBoard() {
+    return board;
+  }
   
   public void buildBoard(String startMessage) {
-    controller.buildBoard(startMessage);
+    String dims = startMessage.replaceAll("\\|", " ");
+    Scanner dimScan = new Scanner(dims);
+    int dim = Math.min(dimScan.nextInt(), Math.min(dimScan.nextInt(), dimScan.nextInt()));
+    dimScan.close();
+    this.board = new Board(dim);
+    board.addObserver(this);
+    view.createView(board);
   }
   
-  public void makeMove(int x, int y, Mark m) {
-    controller.makeMove(x, y, m);
-  }
+  public abstract String makeMove(String question);
   
   public boolean checkMove(int x, int y) {
-    return controller.checkMove(x, y);
+    if (board.isEmptyField(x, y)) {
+      return true;
+    } else {
+      return false;
+    }
   }
   
   public String endGameCheck(int id) {
-    return controller.endGameCheck(id);
+    String result = Protocol.Server.NOTIFYEND;
+    if (gameOver()) {
+      if(board.hasWinner()) {
+          result += " " + 1 + " " + id;
+      } else {
+        result += " " + 2;
+      }
+      return result;
+    }
+    return null;
+  }
+  
+  public Board deepCopy() {
+    return board.deepCopy();
+  }
+  
+  public boolean gameOver() {
+    return board.isFull() || board.hasWinner();
   }
   
   public String getInput(String question) {
+    System.out.print(question);
     BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
     String result = null;
     try {
@@ -89,6 +123,8 @@ public abstract class Player {
     }
   }
   
-  public abstract String getMove(String question);
-
+  @Override
+  public void update(Observable o, Object arg) {
+    view.createView(board);
+  }
 }
