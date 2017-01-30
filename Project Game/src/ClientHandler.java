@@ -3,10 +3,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Scanner;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ClientHandler extends Thread {
 
@@ -33,11 +33,13 @@ public class ClientHandler extends Thread {
   public void readInput() {
     String message;
     try {
-      while ((message = in.readLine()) != null) {
+      while (!(message = in.readLine()).isEmpty()) {
         handleInput(message);
       }
+    } catch (NullPointerException e) {
+      handleEnd(Protocol.Server.NOTIFYEND + " 3 ");
     } catch (SocketException e) {
-      handleEnd(Protocol.Server.NOTIFYEND + " 4 " + player.getID());
+      handleEnd(Protocol.Server.NOTIFYEND + " 3 " + player.getID());
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -76,10 +78,13 @@ public class ClientHandler extends Thread {
 
   private void handleEnd(String endMessage) {
     String winCode = endMessage.split(" ")[1];
-    String playerid = endMessage.split(" ")[2];
+    int playerid = 0;
+    if (endMessage.split(" ").length == 3) {
+      playerid = Integer.parseInt(endMessage.split(" ")[2]);
+    }
     switch (winCode) {
       case "1":
-        if (playerid.equals(String.valueOf(player.getID()))) {
+        if (playerid == player.getID()) {
           System.out.println(Protocol.getWin("1") + " Congratulations " + player.getName() + "!");
         } else {
           System.out.println("You lost the game. Better luck next time.");
@@ -90,7 +95,7 @@ public class ClientHandler extends Thread {
         break;
       case "3":
         System.out.println(Protocol.getWin("3"));
-        if (playerid.equals(String.valueOf(player.getID()))) {
+        if (playerid == player.getID()) {
           System.out.println("You lost the game. Better luck next time.");
         } else {
           System.out.println(Protocol.getWin("1") + " Congratulations " + player.getOpponentName() + "!");
@@ -98,7 +103,7 @@ public class ClientHandler extends Thread {
         break;
       case "4":
         System.out.println("\n" + Protocol.getWin("4"));
-        if (playerid.equals(String.valueOf(player.getID()))) {
+        if (playerid == player.getID()) {
           System.out.println("You lost the game. Better luck next time.");
         } else {
           System.out.println(Protocol.getWin("1") + " Congratulations " + player.getOpponentName() + "!");
@@ -109,6 +114,8 @@ public class ClientHandler extends Thread {
     if (nextGame.equals("y")) {
       try {
         new ClientHandler(new Socket(server.getInetAddress(), server.getPort()),player.getName(), player).start();
+      } catch (ConnectException e) {
+        System.out.println("Couldn't connect to the server.");
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -134,8 +141,15 @@ public class ClientHandler extends Thread {
     if (player instanceof ComputerPlayer) {
       System.out.print(move);
     }
-    int xpos = Integer.parseInt(move.substring(0,1));
-    int ypos = Integer.parseInt(move.substring(2));
+    int xpos = 0;
+    int ypos = 0;
+    try {
+      xpos = Integer.parseInt(move.split(" ")[0]);
+      ypos = Integer.parseInt(move.split(" ")[1]);
+    } catch (ArrayIndexOutOfBoundsException e) {
+      System.out.println("Usage: x and y value seperated by a space.");
+      askMove();
+    }
     if (player.checkMove(xpos, ypos)) {
       writeOutput(Protocol.Client.MAKEMOVE + " " + move);
     } else {

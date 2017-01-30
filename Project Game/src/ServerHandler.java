@@ -100,6 +100,10 @@ public class ServerHandler extends Thread {
       out.newLine();
       out.flush();
       System.out.println("out player " + curStreams + ": " + message);
+    } catch (SocketException e) {
+      changeStreams();
+      writeOutput(Protocol.Server.NOTIFYEND + " 3 " + curTurnID);
+      gameEnd = true;
     } catch (IOException e) {
       e.printStackTrace();
     }
