@@ -14,7 +14,9 @@ import project.game.HumanPlayer;
 import project.game.Mark;
 import project.game.Player;
 import project.server.Protocol;
-
+/**
+ * The <code>ClientHandler</code> handles communication between the <code>Server</code> and <code>Player</code>.
+ */
 public class ClientHandler extends Thread {
 
   private Socket server;
@@ -24,21 +26,44 @@ public class ClientHandler extends Thread {
   private Player hintBot;
   private boolean gameOver;
   
-  public ClientHandler(Socket sock, String username, Player p) throws IOException {
+  /**
+   * <code>ClientHandler</code> is created and parameters are stored.
+   * A buffered reader and writer gets assigned to the input/output stream of the <code>server</code> socket.
+   * A new <code>ComputerPlayer</code> is created to suggest hints to the user.
+   * @param sock, the socket connection with the server. Gets stored in <code>server</code>.
+   * @param username, the <code>name</code> of the <code>Player</code>. Gets assigned to the <code>Player</code> using <code>setName()</code>.
+   * @param p, the <code>Player</code> either <code>ComputerPlayer</code> or <code>HumanPlayer</code>.
+   */
+  public ClientHandler(Socket sock, String username, Player p) {
     this.server = sock;
-    this.in = new BufferedReader(new InputStreamReader(server.getInputStream()));
-    this.out = new BufferedWriter(new OutputStreamWriter(server.getOutputStream()));
+    try {
+      this.in = new BufferedReader(new InputStreamReader(server.getInputStream()));
+      this.out = new BufferedWriter(new OutputStreamWriter(server.getOutputStream()));
+    } catch (IOException e) {
+      System.out.println(e.getMessage());
+      shutdown();
+    }
     this.player = p;
     player.setName(username);
     this.hintBot = new ComputerPlayer(1);
     this.gameOver = false;
   }
   
+  /**
+   * Start of the thread.
+   * Starts <code>readInput()</code>.
+   */
   public void run() {
     System.out.println("Waiting for opponent...");
     readInput();
   }
 
+  /**
+   * Reads input from the <code>BufferedReader</code> (message from the server),
+   * the message gets passed over to <code>handleInput()</code> where it will be handled.
+   * If the <code>BufferedReader</code> returns <code>null</code> or their is a <code>socketException</code>,
+   * the client is disconnected and <code>handleEnd()</code> is used.
+   */
   private void readInput() {
     String message;
     try {
@@ -53,10 +78,15 @@ public class ClientHandler extends Thread {
     } catch (SocketException e) {
       handleEnd(Protocol.Server.NOTIFYEND + " 3 " + player.getID());
     } catch (IOException e) {
-      e.printStackTrace();
+      System.out.println(e.getMessage());
+      shutdown();
     }
   }
   
+  /**
+   * Handles message received from <code>readInput</code>
+   * @param message
+   */
   private void handleInput(String message) {
     Scanner inScanner = new Scanner(message);
     switch (inScanner.next()) {
@@ -65,7 +95,6 @@ public class ClientHandler extends Thread {
         break;
       case Protocol.Server.ASSIGNID:
         player.setID(inScanner.nextInt());
-        hintBot.setID(player.getID());
         break;
       case Protocol.Server.STARTGAME: startGame(message);
         break;
