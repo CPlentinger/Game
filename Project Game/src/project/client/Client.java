@@ -12,6 +12,7 @@ import java.net.UnknownHostException;
 
 import project.game.ComputerPlayer;
 import project.game.HumanPlayer;
+import project.game.Mark;
 
 public class Client {
   private static final String USAGE = "Usage: <address> <port>";
