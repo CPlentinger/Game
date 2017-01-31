@@ -4,7 +4,7 @@
   router="FAN">  
   <class id="1" language="java" name="project.game.TUIView" project="Project Game" 
     file="/Project Game/src/project/game/TUIView.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="183" y="936"/>    
+    <position height="-1" width="-1" x="948" y="1165"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -22,7 +22,7 @@
   </class>  
   <class id="3" language="java" name="project.server.ServerHandler" project="Project Game" 
     file="/Project Game/src/project/server/ServerHandler.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="444" y="515"/>    
+    <position height="-1" width="-1" x="401" y="513"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -40,7 +40,7 @@
   </class>  
   <enumeration id="5" language="java" name="project.game.Mark" project="Project Game" 
     file="/Project Game/src/project/game/Mark.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="785" y="1310"/>    
+    <position height="-1" width="-1" x="465" y="1088"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -49,7 +49,7 @@
   </enumeration>  
   <class id="6" language="java" name="project.game.Player" project="Project Game" 
     file="/Project Game/src/project/game/Player.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="930" y="541"/>    
+    <position height="-1" width="-1" x="655" y="955"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -58,7 +58,7 @@
   </class>  
   <class id="7" language="java" name="project.game.ComputerPlayer" project="Project Game" 
     file="/Project Game/src/project/game/ComputerPlayer.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="831" y="872"/>    
+    <position height="-1" width="-1" x="946" y="737"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -76,7 +76,7 @@
   </class>  
   <class id="9" language="java" name="project.game.Board" project="Project Game" 
     file="/Project Game/src/project/game/Board.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="445" y="1311"/>    
+    <position height="-1" width="-1" x="274" y="955"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -94,7 +94,7 @@
   </class>  
   <class id="11" language="java" name="project.game.HumanPlayer" project="Project Game" 
     file="/Project Game/src/project/game/HumanPlayer.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="1007" y="854"/>    
+    <position height="-1" width="-1" x="944" y="980"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -112,7 +112,7 @@
   </class>  
   <class id="13" language="java" name="java.util.Observable" project="Project Game" 
     file="C:/Program Files/Java/jre1.8.0_121/lib/rt.jar" binary="true" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="167" y="1310"/>    
+    <position height="-1" width="-1" x="403" y="1352"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -121,7 +121,7 @@
   </class>  
   <interface id="14" language="java" name="java.util.Observer" project="Project Game" 
     file="C:/Program Files/Java/jre1.8.0_121/lib/rt.jar" binary="true" corner="BOTTOM_RIGHT">    
-    <position height="81" width="180" x="80" y="1056"/>    
+    <position height="-1" width="-1" x="655" y="1352"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -129,101 +129,135 @@
     </display>  
   </interface>  
   <association id="15">    
-    <end type="SOURCE" refId="9" navigable="false">      
-      <attribute id="16" name="fields">        
-        <position height="0" width="0" x="0" y="0"/>      
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="16" name="view">        
+        <position height="18" width="32" x="812" y="1088"/>      
       </attribute>      
-      <multiplicity id="17" minimum="0" maximum="2147483647">        
-        <position height="0" width="0" x="0" y="0"/>      
+      <multiplicity id="17" minimum="0" maximum="1">        
+        <position height="16" width="23" x="820" y="1102"/>      
       </multiplicity>    
     </end>    
-    <end type="TARGET" refId="5" navigable="true"/>    
+    <end type="TARGET" refId="1" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <dependency id="18">    
-    <end type="SOURCE" refId="3"/>    
-    <end type="TARGET" refId="12"/>  
-  </dependency>  
-  <association id="19">    
-    <bendpoint x="753" y="562"/>    
-    <end type="SOURCE" refId="4" navigable="false">      
-      <attribute id="20" name="hintBot">        
-        <position height="18" width="41" x="800" y="468"/>      
+  <association id="18">    
+    <end type="SOURCE" refId="3" navigable="false">      
+      <attribute id="19" name="serverGame">        
+        <position height="18" width="68" x="479" y="768"/>      
       </attribute>      
-      <multiplicity id="21" minimum="0" maximum="1">        
-        <position height="16" width="23" x="813" y="484"/>      
+      <multiplicity id="20" minimum="0" maximum="1">        
+        <position height="16" width="23" x="518" y="789"/>      
       </multiplicity>    
     </end>    
     <end type="TARGET" refId="6" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <dependency id="22">    
+  <dependency id="21">    
     <end type="SOURCE" refId="10"/>    
     <end type="TARGET" refId="4"/>  
   </dependency>  
-  <generalization id="23">    
-    <bendpoint x="865" y="766"/>    
-    <end type="SOURCE" refId="7"/>    
-    <end type="TARGET" refId="6"/>  
-  </generalization>  
-  <association id="24">    
-    <bendpoint x="619" y="817"/>    
-    <bendpoint x="619" y="1100"/>    
-    <end type="SOURCE" refId="6" navigable="false">      
-      <attribute id="25" name="mark">        
-        <position height="18" width="31" x="680" y="1212"/>      
+  <association id="22">    
+    <end type="SOURCE" refId="9" navigable="false">      
+      <attribute id="23" name="fields">        
+        <position height="18" width="36" x="368" y="990"/>      
       </attribute>      
-      <multiplicity id="26" minimum="0" maximum="1">        
-        <position height="16" width="23" x="683" y="1233"/>      
+      <multiplicity id="24" minimum="0" maximum="2147483647">        
+        <position height="16" width="21" x="378" y="1010"/>      
       </multiplicity>    
     </end>    
     <end type="TARGET" refId="5" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
+  <dependency id="25">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="12"/>  
+  </dependency>  
+  <dependency id="26">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="12"/>  
+  </dependency>  
   <dependency id="27">    
     <end type="SOURCE" refId="2"/>    
     <end type="TARGET" refId="8"/>  
   </dependency>  
-  <dependency id="28">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="12"/>  
-  </dependency>  
-  <generalization id="29">    
-    <end type="SOURCE" refId="11"/>    
-    <end type="TARGET" refId="6"/>  
-  </generalization>  
-  <generalization id="30">    
-    <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="13"/>  
-  </generalization>  
-  <association id="31">    
+  <association id="28">    
+    <bendpoint x="626" y="659"/>    
     <end type="SOURCE" refId="4" navigable="false">      
-      <attribute id="32" name="player">        
-        <position height="18" width="38" x="800" y="557"/>      
+      <attribute id="29" name="hintBot">        
+        <position height="18" width="41" x="581" y="672"/>      
       </attribute>      
-      <multiplicity id="33" minimum="0" maximum="1">        
-        <position height="16" width="23" x="810" y="572"/>      
+      <multiplicity id="30" minimum="0" maximum="1">        
+        <position height="16" width="23" x="599" y="691"/>      
       </multiplicity>    
     </end>    
     <end type="TARGET" refId="6" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <association id="34">    
-    <end type="SOURCE" refId="13" navigable="false">      
-      <attribute id="35" name="obs">        
-        <position height="0" width="0" x="0" y="0"/>      
+  <dependency id="31">    
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="14"/>  
+  </dependency>  
+  <association id="32">    
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="33" name="mark">        
+        <position height="18" width="31" x="531" y="990"/>      
       </attribute>      
-      <multiplicity id="36" minimum="0" maximum="2147483647">        
-        <position height="0" width="0" x="0" y="0"/>      
+      <multiplicity id="34" minimum="0" maximum="1">        
+        <position height="16" width="23" x="529" y="1008"/>      
+      </multiplicity>    
+    </end>    
+    <end type="TARGET" refId="5" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <dependency id="35">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="3"/>  
+  </dependency>  
+  <association id="36">    
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="37" name="board"/>      
+      <multiplicity id="38" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="9" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="39">    
+    <end type="SOURCE" refId="11"/>    
+    <end type="TARGET" refId="6"/>  
+  </generalization>  
+  <generalization id="40">    
+    <end type="SOURCE" refId="7"/>    
+    <end type="TARGET" refId="6"/>  
+  </generalization>  
+  <association id="41">    
+    <end type="SOURCE" refId="13" navigable="false">      
+      <attribute id="42" name="obs">        
+        <position height="0" width="0" x="485" y="256"/>      
+      </attribute>      
+      <multiplicity id="43" minimum="0" maximum="2147483647">        
+        <position height="0" width="0" x="485" y="256"/>      
       </multiplicity>    
     </end>    
     <end type="TARGET" refId="14" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <dependency id="37">    
-    <end type="SOURCE" refId="2"/>    
-    <end type="TARGET" refId="3"/>  
-  </dependency>  
+  <generalization id="44">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="13"/>  
+  </generalization>  
+  <association id="45">    
+    <bendpoint x="721" y="668"/>    
+    <end type="SOURCE" refId="4" navigable="false">      
+      <attribute id="46" name="player">        
+        <position height="18" width="38" x="726" y="673"/>      
+      </attribute>      
+      <multiplicity id="47" minimum="0" maximum="1">        
+        <position height="16" width="23" x="730" y="693"/>      
+      </multiplicity>    
+    </end>    
+    <end type="TARGET" refId="6" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
     sort-features="false" accessors="true" visibility="true">    
     <attributes public="true" package="true" protected="true" private="true" static="true"/>    

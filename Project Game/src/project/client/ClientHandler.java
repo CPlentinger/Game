@@ -73,7 +73,7 @@ public class ClientHandler extends Thread {
         if (inScanner.nextInt() == player.getID()) {
           askMove();
         } else {
-          System.out.println("Waiting for player " + player.getOpponentName() + " (" + player.getMark().Other().toString() + ")...");
+          System.out.println("Waiting for player " + player.getOpponentName() + " (" + player.getMark().other().toString() + ")...");
         }
         break;
       case Protocol.Server.NOTIFYMOVE: 
@@ -187,7 +187,7 @@ public class ClientHandler extends Thread {
     if (message.split(" ")[1].equals(String.valueOf(player.getID()))) {
       player.setField(xpos, ypos, player.getMark());
     } else {
-      player.setField(xpos, ypos, player.getMark().Other());
+      player.setField(xpos, ypos, player.getMark().other());
     }
   }
   
