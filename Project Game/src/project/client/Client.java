@@ -12,7 +12,7 @@ import java.net.UnknownHostException;
 
 import project.game.ComputerPlayer;
 import project.game.HumanPlayer;
-import project.game.Mark;
+
 
 public class Client {
   private static final String USAGE = "Usage: <address> <port>";
@@ -41,7 +41,7 @@ public class Client {
         try {
           String input = in.readLine();
           adrs = InetAddress.getByName(input.split(" ")[0]);
-          port = Integer.valueOf(input.split(" ")[1]);
+          port = Integer.parseInt(input.split(" ")[1]);
           socket = new Socket(adrs, port);
           infoSet = true;
           

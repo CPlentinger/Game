@@ -61,7 +61,7 @@ public class ClientHandler extends Thread {
   /**
    * Reads input from the <code>BufferedReader</code> (message from the server),
    * the message gets passed over to <code>handleInput()</code> where it will be handled.
-   * If the <code>BufferedReader</code> returns <code>null</code> or their is a <code>socketException</code>,
+   * If the <code>BufferedReader</code> returns <code>null</code> or there is a <code>socketException</code>,
    * the client is disconnected and <code>handleEnd()</code> is used.
    */
   private void readInput() {
@@ -84,8 +84,36 @@ public class ClientHandler extends Thread {
   }
   
   /**
-   * Handles message received from <code>readInput</code>
-   * @param message
+   * writes the input string to the server as a new line.
+   * In case writing the message results in a <code>SocketException</code>,
+   * the <code>client</code> will handle it as a disconnect and end the game.
+   * @param message, text to write to the server as new line.
+   */
+  private void writeOutput(String message) {
+    try {
+      out.write(message);
+      out.newLine();
+      out.flush();
+    } catch (SocketException e) {
+      System.out.println(e.getMessage());
+      handleEnd(Protocol.Server.NOTIFYEND + " 3 " + player.getID());
+    } catch (IOException e) {
+      System.out.println(e.getMessage());
+      shutdown();
+    }
+}
+  /**
+   * Handles messages received from <code>readInput</code>.
+   * if the server capabilities are received, the client sends his capabilities using <code>writeOutput()</code>.
+   * if the server assigns an ID to this client, the client sets the ID of the <code>Player</code>
+   * if the server sends the game start message, <code>startGame()</code> is going to handle that.
+   * if the server sends the player turn broadcast, the client checks if the <code>ID</code> in the message matches the one of the <code>Player</code>:
+   *                                                if it's equal: run <code>askMove()</code>.
+   *                                                if it isn't equal: print a waiting message.
+   * if the server sends a notify move message, the client runs <code>setMove()</code> with the message.
+   * if the server sends the end game message, <code>handleEnd</code> is going to handle the message.
+   * if the message doesn't match any of the above, it will be printed to the console.
+   * @param message, message received from the <code>Server</code>.
    */
   private void handleInput(String message) {
     Scanner inScanner = new Scanner(message);
@@ -116,7 +144,101 @@ public class ClientHandler extends Thread {
     }
     inScanner.close();
   }
-
+  
+  /**
+   * starts the local client game by first reading the start message,
+   * it retrieves the <code>mark</code> and <code>opponentName</code> of this <code>Player</code>.
+   * The <code>mark</code> is also set for the <code>hintBot</code>,
+   * because the <code>hintBot</code> should be able to calculate a move that's beneficial for the <code>Player</code>.
+   * After that, the <code>Board</code> gets initialized for the <code>Player</code> using a part of the start message that contains the dimensions.
+   * @param message, the start message received from the <code>Server</code>.
+   */
+  private void startGame(String message) {
+    System.out.println("Starting new game.");
+    String[] players = message.substring(18).split(" ");
+    for (String playerInfo : players) {
+      if (playerInfo.startsWith(String.valueOf(player.getID()))) {
+        if (playerInfo.split("\\|")[2].equals("ff0000")) {
+          player.setMark(Mark.X);
+          hintBot.setMark(Mark.X);
+        } else {
+          player.setMark(Mark.O);
+          hintBot.setMark(Mark.O);
+        }
+      } else {
+        player.setOpponentName(playerInfo.split("\\|")[1]);
+      }
+    }
+    player.buildBoard(message.substring(10,15));
+  }
+  
+  /**
+   * Asks the <code>Player</code> for a move by creating a question,
+   * the question gets send to the <code>makeMove()</code> method of the <code>Player</code>.
+   * That method will return a string containing the x and y-coordinates of the move.
+   * If the <code>Player</code> is an instance of <code>HumanPlayer</code>,
+   * the <code>hintBot</code> copies the board and prints a hint.
+   * If the <code>Player</code> is an instance of <code>ComputerPlayer</code>,
+   * the move gets printed to the console to let the user know what move it made.
+   * After that, the string is split into a x and y-coordinate and gets validated by <code>Player</code>.
+   * If it's valid, the make move message is sent to the <code>Server</code>.
+   */
+  private void askMove() {
+    if (player instanceof HumanPlayer) {
+      hintBot.setBoard(player.getBoard());
+      System.out.println(hintBot.makeMove("hint: "));
+    }
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append("Player ");
+    stringBuilder.append(player.getName());
+    stringBuilder.append(" (");
+    stringBuilder.append(player.getMark().toString());
+    stringBuilder.append("), ");
+    stringBuilder.append("make your move (i.e.: x y):");
+    String move = player.makeMove(stringBuilder.toString());
+    if (player instanceof ComputerPlayer) {
+      System.out.println(move);
+    }
+    int xpos = 0;
+    int ypos = 0;
+    try {
+      xpos = Integer.parseInt(move.split(" ")[0]);
+      ypos = Integer.parseInt(move.split(" ")[1]);
+    } catch (ArrayIndexOutOfBoundsException e) {
+      System.out.println("Usage: x and y value seperated by a space.");
+      askMove();
+    }
+    if (player.checkMove(xpos, ypos)) {
+      writeOutput(Protocol.Client.MAKEMOVE + " " + move);
+    } else {
+      System.out.println("Please choose a empty field on the board!");
+      askMove();
+    }
+  }
+  
+  /**
+   * Places move on local <code>Board</code> of <code>Player</code>.
+   * Splits the notify move message into a x and y-coordinate and puts it on the <code>board</code>.
+   * The message is checked for the <code>ID</code> to set field to the appropriate <code>Mark</code>.
+   * @param message, notify move message from the server.
+   */
+  private void setMove(String message) {
+    int xpos = Integer.parseInt(message.split(" ")[2]);
+    int ypos = Integer.parseInt(message.split(" ")[3]);
+    if (message.split(" ")[1].equals(String.valueOf(player.getID()))) {
+      player.setField(xpos, ypos, player.getMark());
+    } else {
+      player.setField(xpos, ypos, player.getMark().other());
+    }
+  }
+  
+  /**
+   * Prints the appropriate end message based on the <code>winCode</code> out of input string.
+   * The message gets checked if it contains an <code>Player</code> <code>ID</code>,
+   * this will be used to determine the outcome of the game.
+   * More basic messages get printed using the <code>getWin()</code> method out of the <code>Protocol</code>.
+   * @param endMessage, message received from the <code>Server</code> containing end reason.
+   */
   private void handleEnd(String endMessage) {
     String winCode = endMessage.split(" ")[1];
     int playerid = 0;
@@ -166,6 +288,10 @@ public class ClientHandler extends Thread {
     }
   }
 
+  /**
+   * Closes the socket connection with the <code>Server</code> and breaks the <code>readInput()</code> loop.
+   * This will end the current <code>Thread</code> of <code>ClientHandler</code>.
+   */
   private void shutdown() {
     try {
       server.close();
@@ -174,80 +300,5 @@ public class ClientHandler extends Thread {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-  }
-
-  private void askMove() {
-    if (player instanceof HumanPlayer) {
-      hintBot.setBoard(player.getBoard());
-      System.out.println(hintBot.makeMove("hint: "));
-    }
-    StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("Player ");
-    stringBuilder.append(player.getName());
-    stringBuilder.append(" (");
-    stringBuilder.append(player.getMark().toString());
-    stringBuilder.append("), ");
-    stringBuilder.append("make your move (i.e.: x y):");
-    String move = player.makeMove(stringBuilder.toString());
-    if (player instanceof ComputerPlayer) {
-      System.out.println(move);
-    }
-    int xpos = 0;
-    int ypos = 0;
-    try {
-      xpos = Integer.parseInt(move.split(" ")[0]);
-      ypos = Integer.parseInt(move.split(" ")[1]);
-    } catch (ArrayIndexOutOfBoundsException e) {
-      System.out.println("Usage: x and y value seperated by a space.");
-      askMove();
-    }
-    if (player.checkMove(xpos, ypos)) {
-      writeOutput(Protocol.Client.MAKEMOVE + " " + move);
-    } else {
-      System.out.println("Please choose a empty field on the board!");
-      askMove();
-    }
-    
-  }
-  
-  private void setMove(String message) {
-    int xpos = Integer.parseInt(message.split(" ")[2]);
-    int ypos = Integer.parseInt(message.split(" ")[3]);
-    if (message.split(" ")[1].equals(String.valueOf(player.getID()))) {
-      player.setField(xpos, ypos, player.getMark());
-    } else {
-      player.setField(xpos, ypos, player.getMark().other());
-    }
-  }
-  
-  private void writeOutput(String message) {
-      try {
-        out.write(message);
-        out.newLine();
-        out.flush();
-      } catch (SocketException e) {
-        handleEnd(Protocol.Server.NOTIFYEND + " 4 " + player.getID());
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-  }
-  
-  private void startGame(String message) {
-    System.out.println("Starting new game.");
-    String[] players = message.substring(18).split(" ");
-    for (String playerInfo : players) {
-      if (playerInfo.startsWith(String.valueOf(player.getID()))) {
-        if (playerInfo.split("\\|")[2].equals("ff0000")) {
-          player.setMark(Mark.X);
-          hintBot.setMark(Mark.X);
-        } else {
-          player.setMark(Mark.O);
-          hintBot.setMark(Mark.O);
-        }
-      } else {
-        player.setOpponentName(playerInfo.split("\\|")[1]);
-      }
-    }
-    player.buildBoard(message.substring(10,15));
   }
 }
