@@ -1,4 +1,5 @@
 package project.server;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,22 +14,22 @@ import java.util.StringJoiner;
 public class CapabilitiesHandler {
   private Socket client1;
   private Socket client2;
-  private int c1ID;
-  private int c2ID;
+  private int c1Id;
+  private int c2Id;
   private BufferedReader c1in;
   private BufferedWriter c1out;
   private BufferedReader c2in;
   private BufferedWriter c2out;
   private List<String> clientCapabilities;
   
-/**
- * Creates a new <code>CapabilitieHandler<code> with the following references:
- * Sockets of both clients, buffered readers/writers on the input/output streams of the clients,
- * client IDs based on connection count of the <code>Server</code> and a list for the capabilities of both clients.
- * @param c1, socket of the first <code>Client</code> of the pair.
- * @param c2, socket of the second <code>Client</code> of the pair.
- * @param clients, integer representing the total connections with the <code>Server</code>.
- */
+  /**
+   * Creates a new <code>CapabilitieHandler</code> with the following references:
+   * Sockets of both clients, buffered readers/writers on the input/output streams of the clients,
+   * client IDs based on connection count and a list for the capabilities of both clients.
+   * @param c1 , socket of the first <code>Client</code> of the pair.
+   * @param c2 , socket of the second <code>Client</code> of the pair.
+   * @param clients , integer representing the total connections with the <code>Server</code>.
+   */
   public CapabilitiesHandler(Socket c1, Socket c2, int clients) {
     this.client1 = c1;
     this.client2 = c2;
@@ -37,12 +38,11 @@ public class CapabilitiesHandler {
       this.c1out = new BufferedWriter(new OutputStreamWriter(client1.getOutputStream()));
       this.c2in = new BufferedReader(new InputStreamReader(client2.getInputStream()));
       this.c2out = new BufferedWriter(new OutputStreamWriter(client2.getOutputStream()));
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
     }
-    this.c1ID = clients - 1;
-    this.c2ID = clients;
+    this.c1Id = clients - 1;
+    this.c2Id = clients;
     this.clientCapabilities = new ArrayList<String>();
   }
   
@@ -65,14 +65,13 @@ public class CapabilitiesHandler {
       c1out.write(Server.CAPABILITIES);
       c1out.newLine();
       c1out.flush();
-      System.out.println("out player " + c1ID + ": " + Server.CAPABILITIES);
+      System.out.println("out player " + c1Id + ": " + Server.CAPABILITIES);
       c2out.write(Server.CAPABILITIES);
       c2out.newLine();
       c2out.flush();
-      System.out.println("out player " + c2ID + ": " + Server.CAPABILITIES);
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      System.out.println("out player " + c2Id + ": " + Server.CAPABILITIES);
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
     }
   }
   
@@ -82,12 +81,11 @@ public class CapabilitiesHandler {
   private void getClientCapabilities() {
     try {
       clientCapabilities.add(c1in.readLine());
-      System.out.println("in player " + c1ID + ": " + clientCapabilities.get(0));
+      System.out.println("in player " + c1Id + ": " + clientCapabilities.get(0));
       clientCapabilities.add(c2in.readLine());
-      System.out.println("in player " + c2ID + ": " + clientCapabilities.get(0));
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      System.out.println("in player " + c2Id + ": " + clientCapabilities.get(0));
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
     }
   }
   
@@ -96,17 +94,16 @@ public class CapabilitiesHandler {
    */
   private void assignIDs() {
     try {
-      c1out.write(Protocol.Server.ASSIGNID + " " + c1ID);
+      c1out.write(Protocol.Server.ASSIGNID + " " + c1Id);
       c1out.newLine();
       c1out.flush();
-      System.out.println("out player " + c1ID + ": " + Protocol.Server.ASSIGNID + " " + c1ID);
-      c2out.write(Protocol.Server.ASSIGNID + " " + c2ID);
+      System.out.println("out player " + c1Id + ": " + Protocol.Server.ASSIGNID + " " + c1Id);
+      c2out.write(Protocol.Server.ASSIGNID + " " + c2Id);
       c2out.newLine();
       c2out.flush();
-      System.out.println("out player " + c2ID + ": " + Protocol.Server.ASSIGNID + " " + c2ID);
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      System.out.println("out player " + c2Id + ": " + Protocol.Server.ASSIGNID + " " + c2Id);
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
     }
   }
   
@@ -141,9 +138,9 @@ public class CapabilitiesHandler {
     joiner.add(" " + maxRoomDimensionX);
     joiner.add(String.valueOf(maxRoomDimensionY));
     joiner.add(String.valueOf(maxRoomDimensionZ));
-    joiner.add(lengthToWin + " " + c1ID);
+    joiner.add(lengthToWin + " " + c1Id);
     joiner.add(p1Name);
-    joiner.add("0000ff " + c2ID);
+    joiner.add("0000ff " + c2Id);
     joiner.add(p2Name);
     joiner.add("ff0000");
     String gameCapabilities = joiner.toString();

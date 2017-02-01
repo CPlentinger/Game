@@ -1,4 +1,5 @@
 package project.server;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,10 +16,10 @@ public class Server {
   private static Socket socket2;
   
   /**
-   * Starts a <code>Server</code> that accepts <code>Client</code> connections at the <code>port</code> number specified by the user.
-   * Keeps track of the amount of connections and gets <code>gameCapabilities</code> using the <code>CapabilitiesHandler</code>.
-   * Then a <code>ServerHandler</code> <code>Thread</code> will be started using the received information.
-   * @param args, not used.
+   * Starts a server that accepts client connections at the port number specified by the user.
+   * Tracks the amount of connections and gets the game capabilities.
+   * Then a <code>ServerHandler</code> <code>Thread</code> will be started.
+   * @param args , not used.
    */
   public static void main(String[] args) {
     int clients = 0;
@@ -32,34 +33,36 @@ public class Server {
         port = Integer.parseInt(in.readLine());
         sock = new ServerSocket(port);
         started = true;
-      } catch (NumberFormatException e) {
+      } catch (NumberFormatException exc) {
         System.out.println("Input is not a valid port number.");
         System.out.println(USAGE);
-      } catch (BindException e) {
+      } catch (BindException exc) {
         System.out.println("Port is already in use.");
-      } catch (IOException e) {
-        System.out.println(e.getMessage());
+      } catch (IOException exc) {
+        System.out.println(exc.getMessage());
         System.exit(0);
       }
     }
 
     System.out.println("Started listening on port: " + sock.getLocalPort());
-    while(!sock.isClosed()) {
+    while (!sock.isClosed()) {
       try {
-      socket1 = new Socket();
-      socket1 = sock.accept();
-      System.out.println(sock.getInetAddress() + " connected to the server, waiting for opponent...");
-      clients++;
-      socket2 = new Socket();
-      socket2 = sock.accept();
-      System.out.println(sock.getInetAddress() + " connected to the server, handling capabilities.");
-      clients++;
-      CapabilitiesHandler caph1 = new CapabilitiesHandler(socket1, socket2, clients);
-      String gameCapabilities = caph1.getGameCapabilities();
-      
-      new ServerHandler(socket1, socket2, gameCapabilities).start();
-      } catch (IOException e) {
-        System.out.println(e.getMessage());
+        socket1 = new Socket();
+        socket1 = sock.accept();
+        System.out.println(sock.getInetAddress() 
+            + " connected to the server, waiting for opponent...");
+        clients++;
+        socket2 = new Socket();
+        socket2 = sock.accept();
+        System.out.println(sock.getInetAddress() 
+            + " connected to the server, handling capabilities.");
+        clients++;
+        CapabilitiesHandler caph1 = new CapabilitiesHandler(socket1, socket2, clients);
+        String gameCapabilities = caph1.getGameCapabilities();
+        
+        new ServerHandler(socket1, socket2, gameCapabilities).start();
+      } catch (IOException exc) {
+        System.out.println(exc.getMessage());
         System.exit(0);
       }
     }

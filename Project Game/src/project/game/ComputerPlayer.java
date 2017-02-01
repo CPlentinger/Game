@@ -7,7 +7,7 @@ public class ComputerPlayer extends Player {
   /**
    * Creates a <code>ComputerPlayer</code> using the constructor of <code>Player</code>,
    * in addition a <code>thinkingTime</code> will be defined for this <code>Player</code>.
-   * @param time, double representing the <code>thinkingTime</code> in seconds,
+   * @param time , double representing the <code>thinkingTime</code> in seconds,
    *              this will be converted to an integer in milliseconds.
    */
   public ComputerPlayer(double time) {
@@ -18,9 +18,11 @@ public class ComputerPlayer extends Player {
   /**
    * Defines the <code>makeMove</code> method for this player.
    * For the <code>ComputerPlayer</code> this returns:
-   * if the question indicates to calculate a move: A winning move, independently from which <code>Mark</code>.
-   *                                                If this move isn't possible, <code>randomMove()</code> will be used.
-   * if the question doesn't indicate to make a move: <code>getInput()</code> will be used to get input from the console.
+   * if the question indicates to calculate a move: 
+   *    A winning move, independently from which <code>Mark</code>.
+   *    If this move isn't possible, <code>randomMove()</code> will be used.
+   * if the question doesn't indicate to make a move: 
+   *    <code>getInput()</code> will be used to get input from the console.
    */
   @Override
   public String makeMove(String question) {
@@ -61,8 +63,8 @@ public class ComputerPlayer extends Player {
    */
   public String randomMove() {
     Board copy = deepCopy();
-    int xpos = (int) Math.round(Math.random() * (copy.dim -1));
-    int ypos = (int) Math.round(Math.random() * (copy.dim -1));
+    int xpos = (int) Math.round(Math.random() * (copy.dim - 1));
+    int ypos = (int) Math.round(Math.random() * (copy.dim - 1));
     while (!copy.isEmptyField(xpos, ypos)) {
       xpos = (int) Math.round(Math.random() * (copy.dim - 1));
       ypos = (int) Math.round(Math.random() * (copy.dim - 1));

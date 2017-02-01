@@ -19,11 +19,11 @@ public class ServerHandler extends Thread {
   private Socket client1;
   private Socket client2;
   private String gameCapabilities;
-  private int c1ID;
-  private int c2ID;
+  private int c1Id;
+  private int c2Id;
   private BufferedReader in;
   private BufferedWriter out;
-  private int curTurnID;
+  private int curTurnId;
   private int curStreams;
   private Player serverGame;
   private boolean gameEnd;
@@ -32,38 +32,40 @@ public class ServerHandler extends Thread {
    * Creates a <code>ServerHandler</code>:
    * Stores both client sockets as <code>client1</code> and <code>client2</code>.
    * Stores the game capabilities.
-   * Stores the IDs of the clients by splitting the game capabilities string.
+   * Stores the ids of the clients by splitting the game capabilities string.
    * Assigns a buffered reader/writer to the input/output stream of <code>client1</code>. 
    * Sets <code>curStreams</code> to the first <code>Client</code>.
-   *      This variable indicates where the <code>in</code> and <code>out</code> are currently connected to.
+   *      Indicates where the <code>in</code> and <code>out</code> are currently connected to.
    *      Either the input and output stream of <code>client1</code> or <code>client2</code>.
    *      This can be switched using <code>changeStreams()</code>.
-   * Sets <code>curTurnID</code> to <code>c1ID</code>, this variable indicates which client is currently on turn.
-   * Sets <code>gameEnd</code> to false, this boolean indicates whether the game is finished, used for breaking the game loop.
-   * @param sock1, the socket connection with <code>client1</code>.
-   * @param sock2, the socket connection with <code>client2</code>.
-   * @param capabilities, the string containing the game capabilities retrieved from the <code>CapabilitiesHandler</code>.
+   * Sets <code>curTurnId</code> to <code>c1Id</code>,
+   * this variable indicates which client is currently on turn.
+   * Sets <code>gameEnd</code> to false, 
+   * this boolean indicates whether the game is finished, used for breaking the game loop.
+   * @param sock1 , the socket connection with <code>client1</code>.
+   * @param sock2 , the socket connection with <code>client2</code>.
+   * @param capabilities , the game capabilities retrieved from <code>CapabilitiesHandler</code>.
    */
   public ServerHandler(Socket sock1, Socket sock2, String capabilities) {
     this.client1 = sock1;
     this.client2 = sock2;
     this.gameCapabilities = capabilities;
     try {
-      this.c1ID = Integer.parseInt((gameCapabilities.split(" ")[2].split("\\|")[0]));
-      this.c2ID = Integer.parseInt((gameCapabilities.split(" ")[3].split("\\|")[0]));
-    } catch (NumberFormatException e) {
+      this.c1Id = Integer.parseInt((gameCapabilities.split(" ")[2].split("\\|")[0]));
+      this.c2Id = Integer.parseInt((gameCapabilities.split(" ")[3].split("\\|")[0]));
+    } catch (NumberFormatException exc) {
       System.out.println("Invalid game capabilities!");
       shutdown();
     }
     try {
       this.in = new BufferedReader(new InputStreamReader(client1.getInputStream()));
       this.out = new BufferedWriter(new OutputStreamWriter(client1.getOutputStream()));
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
       shutdown();
     }
-    this.curStreams = c1ID;
-    this.curTurnID = c1ID;
+    this.curStreams = c1Id;
+    this.curTurnId = c1Id;
     this.gameEnd = false;
   }
   
@@ -75,7 +77,7 @@ public class ServerHandler extends Thread {
   public void run() {
     startGame(gameCapabilities);
     while (!gameEnd) {
-      writeBoth(Protocol.Server.TURNOFPLAYER + " " + curTurnID);
+      writeBoth(Protocol.Server.TURNOFPLAYER + " " + curTurnId);
       readInput();
       changeStreams();
       changeTurn();
@@ -84,10 +86,12 @@ public class ServerHandler extends Thread {
   }
 
   /**
-   * Reads input from the <code>BufferedReader</code> (message from the current connected input stream (client)),
+   * Reads input from the BufferedReader (message from the current connected input stream/client),
    * the message gets passed over to <code>handleInput()</code> where it will be handled.
-   * If there is a <code>SocketTimeoutException</code>, the current client took to long to make his move and timed out.
-   * If there is a <code>SocketException</code>, the other player gets notified of a disconnect and the game ends.
+   * If there is a <code>SocketTimeoutException</code>,
+   * the current client took to long to make his move and timed out.
+   * If there is a <code>SocketException</code>, 
+   * the other player gets notified of a disconnect and the game ends.
    */
   private void readInput() {
     String clientInput;
@@ -96,16 +100,16 @@ public class ServerHandler extends Thread {
         System.out.println("in player " + curStreams + ": " + clientInput);
         handleInput(clientInput);
       }
-    } catch (SocketTimeoutException e) {
-      writeBoth(Protocol.Server.NOTIFYEND + " 4 " + curTurnID);
+    } catch (SocketTimeoutException exc) {
+      writeBoth(Protocol.Server.NOTIFYEND + " 4 " + curTurnId);
       gameEnd = true;
-    } catch (SocketException e) {
+    } catch (SocketException exc) {
       changeStreams();
-      writeOutput(Protocol.Server.NOTIFYEND + " 3 " + curTurnID);
+      writeOutput(Protocol.Server.NOTIFYEND + " 3 " + curTurnId);
       gameEnd = true;
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
-      writeBoth(Protocol.Server.NOTIFYEND + " 3 " + curTurnID);
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
+      writeBoth(Protocol.Server.NOTIFYEND + " 3 " + curTurnId);
       gameEnd = true;
     }
   }
@@ -117,13 +121,13 @@ public class ServerHandler extends Thread {
     try {
       client1.close();
       client2.close();
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
     }
   }
   
   /**
-   * Writes the input string to the currently connected output stream (indicated by <code>curStreams</code>) as a new line.
+   * Writes the input string to the currently connected output stream as a new line.
    * In case writing the message results in a <code>SocketException</code>,
    * the <code>Server</code> will handle it as a disconnect and end the game.
    * @param message, text to write to the <code>Client</code> as new line.
@@ -134,12 +138,12 @@ public class ServerHandler extends Thread {
       out.newLine();
       out.flush();
       System.out.println("out player " + curStreams + ": " + message);
-    } catch (SocketException e) {
+    } catch (SocketException exc) {
       changeStreams();
-      writeOutput(Protocol.Server.NOTIFYEND + " 3 " + curTurnID);
+      writeOutput(Protocol.Server.NOTIFYEND + " 3 " + curTurnId);
       gameEnd = true;
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
       gameEnd = true;
     }
   }
@@ -158,29 +162,32 @@ public class ServerHandler extends Thread {
   /**
    * Handles the input message of the <code>Client</code>.
    * If the message is a make move message,
-   * the <code>Server</code> runs <code>makeMove()</code> using the x and y coordinates in the message.
+   * the <code>Server</code> runs <code>makeMove()</code> using x and y coordinates in the message.
    * @param input, message from the client.
    */
   private void handleInput(String input) {
-      Scanner inScanner = new Scanner(input);
-      try {
-        if (inScanner.next().equals(Protocol.Client.MAKEMOVE)) {
+    Scanner inScanner = new Scanner(input);
+    try {
+      if (inScanner.next().equals(Protocol.Client.MAKEMOVE)) {
         makeMove(inScanner.nextInt(), inScanner.nextInt());
-        }
-      } catch (NoSuchElementException e) {
-        System.out.println("Invalid makeMove message!");
-        writeBoth(Protocol.Server.NOTIFYEND + " 3 " + curTurnID);
-        gameEnd = true;
       }
-      inScanner.close();
+    } catch (NoSuchElementException exc) {
+      System.out.println("Invalid makeMove message!");
+      writeBoth(Protocol.Server.NOTIFYEND + " 3 " + curTurnId);
+      gameEnd = true;
+    }
+    inScanner.close();
   }
   
   /**
    * start game by first sending the game capabilities to the clients.
    * A new <code>HumanPlayer</code> gets created, this will handle the server side game.
-   * After that, the <code>Board</code> gets initialized for the <code>HumanPlayer</code> using a part of the start message that contains the dimensions.
-   * Finally, a socket timeout of 2 minutes is set for both clients. This will be used as game timeout.
-   * If the 2 minutes expire, <code>readInput()</code> will throw a <code>SocketTimeoutExcepiont</code>.
+   * The <code>Board</code> gets initialized for the <code>HumanPlayer</code>,
+   * using a part of the start message that contains the dimensions.
+   * Finally, a socket timeout of 2 minutes is set for both clients.
+   * This will be used as game timeout.
+   * If the 2 minutes expire,
+   * <code>readInput()</code> will throw a <code>SocketTimeoutExcepiont</code>.
    * @param message, the start message created by the <code>CapabilitiesHandler</code>.
    */
   private void startGame(String gameCapabilities) {
@@ -191,17 +198,17 @@ public class ServerHandler extends Thread {
     try {
       client1.setSoTimeout(120000);
       client2.setSoTimeout(120000);
-    } catch (SocketException e) {
-      writeBoth(Protocol.Server.NOTIFYEND + " 3 " + curTurnID);
+    } catch (SocketException exc) {
+      writeBoth(Protocol.Server.NOTIFYEND + " 3 " + curTurnId);
     }
   }
   
   /**
-   * Gets the <code>Mark</> of the client currently on turn.
-   * @return the <code>Mark</> of the client currently on turn. 
+   * Gets the <code>Mark</code> of the client currently on turn.
+   * @return the <code>Mark</code> of the client currently on turn. 
    */
   private Mark getMark() {
-    if (curTurnID == c1ID) {
+    if (curTurnId == c1Id) {
       return Mark.O;
     } else {
       return Mark.X;
@@ -214,23 +221,24 @@ public class ServerHandler extends Thread {
    *      The <code>Server</code> places the move at his own Board.
    *      Broadcasts a notify message to both clients.
    *      Uses <code>endGameCheck()</code> to check if the game has ended.
-   *      If this is the case, the <code>Server</code> sends the clients the end game message and ends the game.
+   *      If this is the case,
+   *      the <code>Server</code> sends the clients the end game message and ends the game.
    * If the message contains a invalid move:
-   *      The <code>Server</code> broadcasts the turn of player message again and starts <code>readInput()</code>.
+   *      The <code>Server</code> starts current player's move again.
    * @param x, integer representing x coordinate.
    * @param y, integer representing y coordinate.
    */
-  private void makeMove(int x, int y) {
-    if (serverGame.checkMove(x, y)) {
-      serverGame.setField(x, y, getMark());
-      writeBoth(Protocol.Server.NOTIFYMOVE + " " + curTurnID + " " + x + " " + y);
+  private void makeMove(int xpos, int ypos) {
+    if (serverGame.checkMove(xpos, ypos)) {
+      serverGame.setField(xpos, ypos, getMark());
+      writeBoth(Protocol.Server.NOTIFYMOVE + " " + curTurnId + " " + xpos + " " + ypos);
       String endMessage;
-      if ((endMessage = serverGame.endGameCheck(curTurnID)) != null) {
+      if ((endMessage = serverGame.endGameCheck(curTurnId)) != null) {
         writeBoth(endMessage);
         gameEnd = true;
       }
     } else {
-      writeOutput(Protocol.Server.TURNOFPLAYER + " " + curTurnID);
+      writeOutput(Protocol.Server.TURNOFPLAYER + " " + curTurnId);
       readInput();
     }
   }
@@ -239,34 +247,39 @@ public class ServerHandler extends Thread {
    * Switches the buffered reader and writer to the input/output stream of the other client.
    */
   private void changeStreams() {
-    if (curStreams == c1ID) {
+    if (curStreams == c1Id) {
       try {
         in = new BufferedReader(new InputStreamReader(client2.getInputStream()));
         out = new BufferedWriter(new OutputStreamWriter(client2.getOutputStream()));
-      } catch (IOException e) {
-        e.printStackTrace();
+      } catch (IOException exc) {
+        System.out.print(exc.getMessage());
+        writeOutput(Protocol.Server.NOTIFYEND + " 3 " + curTurnId);
+        gameEnd = true;
       }
-      curStreams = c2ID;
+      curStreams = c2Id;
     } else {
       try {
-      in = new BufferedReader(new InputStreamReader(client1.getInputStream()));
-      out = new BufferedWriter(new OutputStreamWriter(client1.getOutputStream()));
-      } catch (IOException e) {
-        e.printStackTrace();
+        in = new BufferedReader(new InputStreamReader(client1.getInputStream()));
+        out = new BufferedWriter(new OutputStreamWriter(client1.getOutputStream()));
+      } catch (IOException exc) {
+        System.out.print(exc.getMessage()); 
+        writeOutput(Protocol.Server.NOTIFYEND + " 3 " + curTurnId);
+        gameEnd = true;
       }
-      curStreams = c1ID;
+      curStreams = c1Id;
     }
   }
+  
   /**
-   * Switches the <code>curTurnID</code> variable to the ID of the other client.
+   * Switches the <code>curTurnId</code> variable to the id of the other client.
    */
   private void changeTurn() {
-    if (curTurnID == c1ID) {
-      curTurnID = c2ID;
-      System.out.println("Changed turn to: Player " + curTurnID);
+    if (curTurnId == c1Id) {
+      curTurnId = c2Id;
+      System.out.println("Changed turn to: Player " + curTurnId);
     } else {
-      curTurnID = c1ID;
-      System.out.println("Changed turn to: Player " + curTurnID);
+      curTurnId = c1Id;
+      System.out.println("Changed turn to: Player " + curTurnId);
     }
   }
 }

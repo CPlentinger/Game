@@ -1,4 +1,11 @@
 package project.client;
+
+import project.game.ComputerPlayer;
+import project.game.HumanPlayer;
+import project.game.Mark;
+import project.game.Player;
+import project.server.Protocol;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -9,13 +16,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Scanner;
 
-import project.game.ComputerPlayer;
-import project.game.HumanPlayer;
-import project.game.Mark;
-import project.game.Player;
-import project.server.Protocol;
 /**
- * The <code>ClientHandler</code> handles communication between the <code>Server</code> and <code>Player</code>.
+ * The <code>ClientHandler</code> handles communication between the server and player.
  */
 public class ClientHandler extends Thread {
 
@@ -28,22 +30,22 @@ public class ClientHandler extends Thread {
   
   /**
    * <code>ClientHandler</code> is created and parameters are stored.
-   * A buffered reader and writer gets assigned to the input/output stream of the <code>server</code> socket.
+   * A buffered reader and writer gets assigned to the input/output stream of the server socket.
    * A new <code>ComputerPlayer</code> is created to suggest hints to the user.
-   * @param sock, the socket connection with the server. Gets stored in <code>server</code>.
-   * @param username, the <code>name</code> of the <code>Player</code>. Gets assigned to the <code>Player</code> using <code>setName()</code>.
-   * @param p, the <code>Player</code> either <code>ComputerPlayer</code> or <code>HumanPlayer</code>.
+   * @param sock , the socket connection with the server.
+   * @param username , the name of the player. Gets assigned using <code>setName()</code>.
+   * @param tplayer , the player either ComputerPlayer or HumanPlayer.
    */
-  public ClientHandler(Socket sock, String username, Player p) {
+  public ClientHandler(Socket sock, String username, Player tplayer) {
     this.server = sock;
     try {
       this.in = new BufferedReader(new InputStreamReader(server.getInputStream()));
       this.out = new BufferedWriter(new OutputStreamWriter(server.getOutputStream()));
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
       shutdown();
     }
-    this.player = p;
+    this.player = tplayer;
     player.setName(username);
     this.hintBot = new ComputerPlayer(1);
     this.gameOver = false;
@@ -61,7 +63,7 @@ public class ClientHandler extends Thread {
   /**
    * Reads input from the <code>BufferedReader</code> (message from the server),
    * the message gets passed over to <code>handleInput()</code> where it will be handled.
-   * If the <code>BufferedReader</code> returns <code>null</code> or there is a <code>socketException</code>,
+   * If the <code>BufferedReader</code> returns null or there is a <code>socketException</code>,
    * the client is disconnected and <code>handleEnd()</code> is used.
    */
   private void readInput() {
@@ -73,12 +75,12 @@ public class ClientHandler extends Thread {
           break;
         }
       }
-    } catch (NullPointerException e) {
+    } catch (NullPointerException exc) {
       handleEnd(Protocol.Server.NOTIFYEND + " 3 ");
-    } catch (SocketException e) {
-      handleEnd(Protocol.Server.NOTIFYEND + " 3 " + player.getID());
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
+    } catch (SocketException exc) {
+      handleEnd(Protocol.Server.NOTIFYEND + " 3 " + player.getId());
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
       shutdown();
     }
   }
@@ -94,25 +96,30 @@ public class ClientHandler extends Thread {
       out.write(message);
       out.newLine();
       out.flush();
-    } catch (SocketException e) {
-      System.out.println(e.getMessage());
-      handleEnd(Protocol.Server.NOTIFYEND + " 3 " + player.getID());
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
+    } catch (SocketException exc) {
+      System.out.println(exc.getMessage());
+      handleEnd(Protocol.Server.NOTIFYEND + " 3 " + player.getId());
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
       shutdown();
     }
-}
+  }
+  
   /**
    * Handles messages received from <code>readInput</code>.
-   * if the server capabilities are received, the client sends his capabilities using <code>writeOutput()</code>.
-   * if the server assigns an ID to this client, the client sets the ID of the <code>Player</code>
-   * if the server sends the game start message, <code>startGame()</code> is going to handle that.
-   * if the server sends the player turn broadcast, the client checks if the <code>ID</code> in the message matches the one of the <code>Player</code>:
+   * If the server capabilities are received,
+   * the client sends his capabilities using <code>writeOutput()</code>.
+   * If the server assigns an ID to this client, the client sets the ID of the <code>Player</code>
+   * If the server sends the game start message, <code>startGame()</code> is going to handle that.
+   * If the server sends the player turn broadcast, 
+   * the client checks if the <code>ID</code> in the message matches the one of the player:
    *                                                if it's equal: run <code>askMove()</code>.
    *                                                if it isn't equal: print a waiting message.
-   * if the server sends a notify move message, the client runs <code>setMove()</code> with the message.
-   * if the server sends the end game message, <code>handleEnd</code> is going to handle the message.
-   * if the message doesn't match any of the above, it will be printed to the console.
+   * If the server sends a notify move message, 
+   * the client runs <code>setMove()</code> with the message.
+   * If the server sends the end game message,
+   * <code>handleEnd</code> is going to handle the message.
+   * If the message doesn't match any of the above, it will be printed to the console.
    * @param message, message received from the <code>Server</code>.
    */
   private void handleInput(String message) {
@@ -122,15 +129,21 @@ public class ClientHandler extends Thread {
         writeOutput(Protocol.Client.SENDCAPABILITIES + " 2 " + player.getName() + " 0 4 4 4 4 0 0");
         break;
       case Protocol.Server.ASSIGNID:
-        player.setID(inScanner.nextInt());
+        player.setId(inScanner.nextInt());
         break;
       case Protocol.Server.STARTGAME: startGame(message);
         break;
       case Protocol.Server.TURNOFPLAYER:
-        if (inScanner.nextInt() == player.getID()) {
+        if (inScanner.nextInt() == player.getId()) {
           askMove();
         } else {
-          System.out.println("Waiting for player " + player.getOpponentName() + " (" + player.getMark().other().toString() + ")...");
+          StringBuilder waitmsg = new StringBuilder();
+          waitmsg.append("Waiting for player ");
+          waitmsg.append(player.getOpponentName());
+          waitmsg.append(" (");
+          waitmsg.append(player.getMark().other().toString());
+          waitmsg.append(")...");
+          System.out.println(waitmsg.toString());
         }
         break;
       case Protocol.Server.NOTIFYMOVE: 
@@ -149,15 +162,16 @@ public class ClientHandler extends Thread {
    * starts the local client game by first reading the start message,
    * it retrieves the <code>mark</code> and <code>opponentName</code> of this <code>Player</code>.
    * The <code>mark</code> is also set for the <code>hintBot</code>,
-   * because the <code>hintBot</code> should be able to calculate a move that's beneficial for the <code>Player</code>.
-   * After that, the <code>Board</code> gets initialized for the <code>Player</code> using a part of the start message that contains the dimensions.
+   * because the hintBot should be able to calculate a move that's beneficial for the player.
+   * After that, the <code>Board</code> gets initialized for the <code>Player</code>.
+   * This is done by using a part of the start message that contains the dimensions.
    * @param message, the start message received from the <code>Server</code>.
    */
   private void startGame(String message) {
     System.out.println("Starting new game.");
     String[] players = message.substring(18).split(" ");
     for (String playerInfo : players) {
-      if (playerInfo.startsWith(String.valueOf(player.getID()))) {
+      if (playerInfo.startsWith(String.valueOf(player.getId()))) {
         if (playerInfo.split("\\|")[2].equals("ff0000")) {
           player.setMark(Mark.X);
           hintBot.setMark(Mark.X);
@@ -180,7 +194,7 @@ public class ClientHandler extends Thread {
    * the <code>hintBot</code> copies the board and prints a hint.
    * If the <code>Player</code> is an instance of <code>ComputerPlayer</code>,
    * the move gets printed to the console to let the user know what move it made.
-   * After that, the string is split into a x and y-coordinate and gets validated by <code>Player</code>.
+   * The string is split into a x and y-coordinate and gets validated by <code>Player</code>.
    * If it's valid, the make move message is sent to the <code>Server</code>.
    */
   private void askMove() {
@@ -204,7 +218,7 @@ public class ClientHandler extends Thread {
     try {
       xpos = Integer.parseInt(move.split(" ")[0]);
       ypos = Integer.parseInt(move.split(" ")[1]);
-    } catch (ArrayIndexOutOfBoundsException e) {
+    } catch (ArrayIndexOutOfBoundsException exc) {
       System.out.println("Usage: x and y value seperated by a space.");
       askMove();
     }
@@ -219,13 +233,13 @@ public class ClientHandler extends Thread {
   /**
    * Places move on local <code>Board</code> of <code>Player</code>.
    * Splits the notify move message into a x and y-coordinate and puts it on the <code>board</code>.
-   * The message is checked for the <code>ID</code> to set field to the appropriate <code>Mark</code>.
+   * The message is checked for the ID to set field to the appropriate <code>Mark</code>.
    * @param message, notify move message from the server.
    */
   private void setMove(String message) {
     int xpos = Integer.parseInt(message.split(" ")[2]);
     int ypos = Integer.parseInt(message.split(" ")[3]);
-    if (message.split(" ")[1].equals(String.valueOf(player.getID()))) {
+    if (message.split(" ")[1].equals(String.valueOf(player.getId()))) {
       player.setField(xpos, ypos, player.getMark());
     } else {
       player.setField(xpos, ypos, player.getMark().other());
@@ -236,7 +250,7 @@ public class ClientHandler extends Thread {
    * Prints the appropriate end message based on the <code>winCode</code> out of input string.
    * The message gets checked if it contains an <code>Player</code> <code>ID</code>,
    * this will be used to determine the outcome of the game.
-   * More basic messages get printed using the <code>getWin()</code> method out of the <code>Protocol</code>.
+   * More basic messages get printed using the <code>getWin()</code> method.
    * @param endMessage, message received from the <code>Server</code> containing end reason.
    */
   private void handleEnd(String endMessage) {
@@ -247,8 +261,8 @@ public class ClientHandler extends Thread {
     }
     switch (winCode) {
       case "1":
-        if (playerid == player.getID()) {
-          System.out.println(Protocol.getWin("1") + " Congratulations " + player.getName() + "!");
+        if (playerid == player.getId()) {
+          System.out.println(Protocol.getWin("1") + " Good job " + player.getName() + "!");
         } else {
           System.out.println("You lost the game. Better luck next time.");
         }
@@ -258,30 +272,35 @@ public class ClientHandler extends Thread {
         break;
       case "3":
         System.out.println(Protocol.getWin("3"));
-        if (playerid == player.getID()) {
+        if (playerid == player.getId()) {
           System.out.println("You lost the game. Better luck next time.");
         } else {
-          System.out.println(Protocol.getWin("1") + " Congratulations " + player.getOpponentName() + "!");
+          System.out.println(Protocol.getWin("1") + " Good job " + player.getOpponentName() + "!");
         }
         break;
       case "4":
         System.out.println("\n" + Protocol.getWin("4"));
-        if (playerid == player.getID()) {
+        if (playerid == player.getId()) {
           System.out.println("You lost the game. Better luck next time.");
         } else {
-          System.out.println(Protocol.getWin("1") + " Congratulations " + player.getOpponentName() + "!");
+          System.out.println(Protocol.getWin("1") + " Good job " + player.getOpponentName() + "!");
         }
-      default: break;
+        break;
+      default: System.out.println(Protocol.getWin("unknown"));
+        break;
     }
     String nextGame = player.makeMove("Do you want to play another game? (y/n)");
     if (nextGame.equals("y")) {
       try {
-        new ClientHandler(new Socket(server.getInetAddress(), server.getPort()),player.getName(), player).start();
+        new ClientHandler(new Socket(server.getInetAddress(),
+            server.getPort()),player.getName(), player).start();
         shutdown();
-      } catch (ConnectException e) {
+      } catch (ConnectException exc) {
+        System.out.println(exc.getMessage());
         System.out.println("Couldn't connect to the server.");
-      } catch (IOException e) {
-        e.printStackTrace();
+      } catch (IOException exc) {
+        System.out.println(exc.getMessage());
+        shutdown();
       }
     } else {
       System.out.println("Game ended, thanks for playing!");
@@ -289,16 +308,16 @@ public class ClientHandler extends Thread {
   }
 
   /**
-   * Closes the socket connection with the <code>Server</code> and breaks the <code>readInput()</code> loop.
+   * Closes the connection with the server and breaks the <code>readInput()</code> loop.
    * This will end the current <code>Thread</code> of <code>ClientHandler</code>.
    */
   private void shutdown() {
     try {
       server.close();
       gameOver = true;
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    } catch (IOException exc) {
+      System.out.println(exc.getMessage());
+      gameOver = true;
     }
   }
 }
