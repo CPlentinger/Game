@@ -82,7 +82,7 @@ public class ServerHandler extends Thread {
    * Starts a game using the game capabilities and starts game loop.
    * The game loop let clients alternately make moves until the game ends.
    */
-  //JML not applicable.
+  //@ requires !gameEnd;
   public void run() {
     startGame(gameCapabilities);
     while (!gameEnd) {
@@ -102,6 +102,7 @@ public class ServerHandler extends Thread {
    * If there is a <code>SocketException</code>, 
    * the other player gets notified of a disconnect and the game ends.
    */
+  //@ requires in.readLine() != null;
   private void readInput() {
     String clientInput;
     try {
@@ -126,6 +127,8 @@ public class ServerHandler extends Thread {
   /**
    * Closes the sockets of the clients. 
    */
+  //@ requires client1.isConnected() && client2.isConnected();
+  //@ ensures client1.isClosed() && client2.isClosed();
   private void shutdown() {
     try {
       client1.close();
@@ -141,6 +144,7 @@ public class ServerHandler extends Thread {
    * the <code>Server</code> will handle it as a disconnect and end the game.
    * @param message, text to write to the <code>Client</code> as new line.
    */
+  //@ requires message != null;
   private void writeOutput(String message) {
     try {
       out.write(message);
@@ -161,6 +165,7 @@ public class ServerHandler extends Thread {
    * Writes the input string to both clients by switching the streams.
    * @param message, text to write to both clients as new line.
    */
+  //@ ensures curStreams == \old(curStreams);
   private void writeBoth(String message) {
     writeOutput(message);
     changeStreams();
@@ -174,6 +179,7 @@ public class ServerHandler extends Thread {
    * the <code>Server</code> runs <code>makeMove()</code> using x and y coordinates in the message.
    * @param input, message from the client.
    */
+  //@ requires input != null; 
   private void handleInput(String input) {
     Scanner inScanner = new Scanner(input);
     try {
@@ -199,6 +205,10 @@ public class ServerHandler extends Thread {
    * <code>readInput()</code> will throw a <code>SocketTimeoutExcepiont</code>.
    * @param message, the start message created by the <code>CapabilitiesHandler</code>.
    */
+  /*@ requires gameCapabilities.length() >= 15 && client1.isConnected() && client2.isConnected();
+    @ ensures client1.getSoTimeout() == 120000 && client2.getSoTimeout() == 120000 &&
+    @ serverGame.getBoard() != null;
+    @*/
   private void startGame(String gameCapabilities) {
     System.out.println("Starting new game.");
     writeBoth(gameCapabilities);
@@ -216,6 +226,9 @@ public class ServerHandler extends Thread {
    * Gets the <code>Mark</code> of the client currently on turn.
    * @return the <code>Mark</code> of the client currently on turn. 
    */
+  /*@ ensures curTurnId == c1Id ==> \result == Mark.O && 
+    @ curTurnId == c2Id ==> \result == Mark.X;
+    @*/
   private Mark getMark() {
     if (curTurnId == c1Id) {
       return Mark.O;
@@ -237,6 +250,12 @@ public class ServerHandler extends Thread {
    * @param x, integer representing x coordinate.
    * @param y, integer representing y coordinate.
    */
+  /*@ requires serverGame.checkMove(xpos, ypos);
+    @ ensures serverGame.checkMove(xpos, ypos) ==> 
+    @ (\exists int z; 0 <= z && z < serverGame.getBoard().dim; 
+    @ serverGame.getBoard().getField(xpos,ypos,z) == getMark() &&
+    @ (\forall int p; 0 <= p && p < z; !serverGame.getBoard().isEmptyField(xpos,ypos,p)));
+    @*/
   private void makeMove(int xpos, int ypos) {
     if (serverGame.checkMove(xpos, ypos)) {
       serverGame.setField(xpos, ypos, getMark());
@@ -255,6 +274,10 @@ public class ServerHandler extends Thread {
   /**
    * Switches the buffered reader and writer to the input/output stream of the other client.
    */
+  /*@ requires client1.isConnected() && client2.isConnected();
+    @ ensures curStreams == c1Id ==> curStreams == c2Id && 
+    @ curStreams == c2Id ==> curStreams == c1Id;
+    @*/
   private void changeStreams() {
     if (curStreams == c1Id) {
       try {
@@ -282,6 +305,9 @@ public class ServerHandler extends Thread {
   /**
    * Switches the <code>curTurnId</code> variable to the id of the other client.
    */
+  /*@ ensures curTurnId == c1Id ==> curTurnId == c2Id &&
+    @ curTurnId == c2Id ==> curTurnId == c1Id;
+    @*/
   private void changeTurn() {
     if (curTurnId == c1Id) {
       curTurnId = c2Id;
