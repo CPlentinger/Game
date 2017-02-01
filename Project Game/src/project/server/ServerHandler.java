@@ -16,18 +16,20 @@ import project.game.Mark;
 import project.game.Player;
 
 public class ServerHandler extends Thread {
-  private Socket client1;
-  private Socket client2;
-  private String gameCapabilities;
-  private int c1Id;
-  private int c2Id;
+  private /*@ spec_public @*/ Socket client1;
+  private /*@ spec_public @*/ Socket client2;
+  private /*@ spec_public @*/ String gameCapabilities;
+  private /*@ spec_public @*/ int c1Id;
+  private /*@ spec_public @*/ int c2Id;
   private BufferedReader in;
   private BufferedWriter out;
-  private int curTurnId;
-  private int curStreams;
-  private Player serverGame;
-  private boolean gameEnd;
-  
+  private /*@ spec_public @*/ int curTurnId;
+  //@ public invariant curTurnId == c1Id || curTurnId == c2Id;
+  private /*@ spec_public @*/ int curStreams;
+  //@ public invariant curStreams == c1Id || curTurnId == c2Id;
+  private /*@ spec_public @*/ Player serverGame;
+  private /*@ spec_public @*/ boolean gameEnd;
+
   /**
    * Creates a <code>ServerHandler</code>:
    * Stores both client sockets as <code>client1</code> and <code>client2</code>.
@@ -46,6 +48,12 @@ public class ServerHandler extends Thread {
    * @param sock2 , the socket connection with <code>client2</code>.
    * @param capabilities , the game capabilities retrieved from <code>CapabilitiesHandler</code>.
    */
+  /*@ requires sock1.isConnected() && sock2.isConnected() &&
+    @ capabilities.contains(Protocol.Server.STARTGAME);
+    @ ensures client1 == sock1 && client2 == sock2 && 
+    @ gameCapabilities == capabilities && curStreams == c1Id &&
+    @ curTurnId == c1Id && gameEnd == false;
+    @*/
   public ServerHandler(Socket sock1, Socket sock2, String capabilities) {
     this.client1 = sock1;
     this.client2 = sock2;
@@ -74,6 +82,7 @@ public class ServerHandler extends Thread {
    * Starts a game using the game capabilities and starts game loop.
    * The game loop let clients alternately make moves until the game ends.
    */
+  //JML not applicable.
   public void run() {
     startGame(gameCapabilities);
     while (!gameEnd) {

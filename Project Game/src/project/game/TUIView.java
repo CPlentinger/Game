@@ -20,15 +20,15 @@ public class TUIView {
    * @return string containing the y-axes.
    */
   public String makeYAxis(Board board) {
-    String Yaxis = " | 0 1 2 3 Y";
-    String Delim = "--|--------  ";
-    String Space = "        ";
-    String firstLine = "0" + Yaxis + Space;
-    String secLine = Delim + Space;
+    String yaxis = " | 0 1 2 3 Y";
+    String delim = "--|--------  ";
+    String space = "        ";
+    String firstLine = "0" + yaxis + space;
+    String secLine = delim + space;
     for (int i = 1; i < board.dim; i++) {
       if (!board.isEmptyLayer(i)) {
-        firstLine += i + Yaxis + Space;
-        secLine += Delim + Space;
+        firstLine += i + yaxis + space;
+        secLine += delim + space;
       }
     }
     firstLine += "\n";
@@ -69,15 +69,15 @@ public class TUIView {
    */
   public String makeFields(Board board) {
     String[] lines = makeFieldsArray(board);
-    String Space = "        ";
+    String space = "        ";
     String line = "";
     for (int i = 0; i < board.dim; i++) {
-      String Xaxis = i + " |"; 
+      String xaxis = i + " |"; 
       for (int j = 0; j < board.dim; j++) {
         if (j == 0) {
-          line += Xaxis + lines[i + 4 * j] + Space;
+          line += xaxis + lines[i + 4 * j] + space;
         } else if (!board.isEmptyLayer(j)) {
-          line += Xaxis + lines[i + 4 * j] + Space;
+          line += xaxis + lines[i + 4 * j] + space;
         }
       }
       line += "\n";
@@ -92,11 +92,11 @@ public class TUIView {
    * @return line containing the labels for the x-axes of this view.
    */
   public String makeLastLine(Board board) {
-    String Space = "                    ";
-    String result = "X" + Space;
+    String space = "                    ";
+    String result = "X" + space;
     for (int i = 1; i < board.dim; i++) {
       if (!board.isEmptyLayer(i)) {
-        result += "X" + Space;
+        result += "X" + space;
       }
     }
     result += "\n";

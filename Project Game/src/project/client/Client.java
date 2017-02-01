@@ -1,8 +1,5 @@
 package project.client;
 
-import project.game.ComputerPlayer;
-import project.game.HumanPlayer;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,6 +8,12 @@ import java.net.InetAddress;
 import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+
+import project.game.ComputerPlayer;
+import project.game.HumanPlayer;
+
+
+
 
 public class Client {
   private static final String USAGE = "Usage: <address> <port>";
@@ -38,7 +41,7 @@ public class Client {
     while (infoSet == false) {
       System.out.print("Please input server address and port to connect(i.e <address> <port>): ");
       try {
-        String input = in.readLine();
+        String input = in.readLine().replaceAll(" ", "-");
         adrs = InetAddress.getByName(input.split(" ")[0]);
         port = Integer.parseInt(input.split(" ")[1]);
         socket = new Socket(adrs, port);

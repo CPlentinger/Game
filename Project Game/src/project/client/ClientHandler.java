@@ -1,11 +1,5 @@
 package project.client;
 
-import project.game.ComputerPlayer;
-import project.game.HumanPlayer;
-import project.game.Mark;
-import project.game.Player;
-import project.server.Protocol;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -16,17 +10,23 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Scanner;
 
+import project.game.ComputerPlayer;
+import project.game.HumanPlayer;
+import project.game.Mark;
+import project.game.Player;
+import project.server.Protocol;
+
 /**
  * The <code>ClientHandler</code> handles communication between the server and player.
  */
 public class ClientHandler extends Thread {
 
-  private Socket server;
+  private /*@ spec_public @*/ Socket server;
   private BufferedReader in;
   private BufferedWriter out;
-  private Player player;
+  private /*@ spec_public @*/ Player player;
   private Player hintBot;
-  private boolean gameOver;
+  private /*@ spec_public @*/ boolean gameOver;
   
   /**
    * <code>ClientHandler</code> is created and parameters are stored.
@@ -36,6 +36,11 @@ public class ClientHandler extends Thread {
    * @param username , the name of the player. Gets assigned using <code>setName()</code>.
    * @param tplayer , the player either ComputerPlayer or HumanPlayer.
    */
+  /*@ requires sock.isConnected() && !username.contains(" ") &&
+    @ tplayer instanceof HumanPlayer || tplayer instanceof ComputerPlayer;
+    @ ensures server == sock && player == tplayer &&
+    @ player.getName() == username && gameOver == false;
+    @*/
   public ClientHandler(Socket sock, String username, Player tplayer) {
     this.server = sock;
     try {
@@ -55,6 +60,7 @@ public class ClientHandler extends Thread {
    * Start of the thread.
    * Starts <code>readInput()</code>.
    */
+  // JML not applicable here.
   public void run() {
     System.out.println("Waiting for opponent...");
     readInput();
@@ -66,6 +72,7 @@ public class ClientHandler extends Thread {
    * If the <code>BufferedReader</code> returns null or there is a <code>socketException</code>,
    * the client is disconnected and <code>handleEnd()</code> is used.
    */
+  //requires in.readLine() != null && !gameOver;
   private void readInput() {
     String message;
     try {
@@ -91,6 +98,7 @@ public class ClientHandler extends Thread {
    * the <code>client</code> will handle it as a disconnect and end the game.
    * @param message, text to write to the server as new line.
    */
+  //@ requires message != null && server.isConnected();
   private void writeOutput(String message) {
     try {
       out.write(message);
@@ -122,6 +130,7 @@ public class ClientHandler extends Thread {
    * If the message doesn't match any of the above, it will be printed to the console.
    * @param message, message received from the <code>Server</code>.
    */
+  //@ requires message != null; 
   private void handleInput(String message) {
     Scanner inScanner = new Scanner(message);
     switch (inScanner.next()) {
@@ -167,6 +176,11 @@ public class ClientHandler extends Thread {
    * This is done by using a part of the start message that contains the dimensions.
    * @param message, the start message received from the <code>Server</code>.
    */
+  /*@ requires message.length() >= 18 && message.contains(String.valueOf(player.getId())) &&
+    @ message.contains("ff0000") && message.contains("0000ff");
+    @ ensures player.getBoard() != null && player.getMark() != null &&
+    @ player.getOpponentName() != null;
+    @*/
   private void startGame(String message) {
     System.out.println("Starting new game.");
     String[] players = message.substring(18).split(" ");
@@ -197,6 +211,7 @@ public class ClientHandler extends Thread {
    * The string is split into a x and y-coordinate and gets validated by <code>Player</code>.
    * If it's valid, the make move message is sent to the <code>Server</code>.
    */
+  //JML not applicable.
   private void askMove() {
     if (player instanceof HumanPlayer) {
       hintBot.setBoard(player.getBoard());
@@ -236,6 +251,9 @@ public class ClientHandler extends Thread {
    * The message is checked for the ID to set field to the appropriate <code>Mark</code>.
    * @param message, notify move message from the server.
    */
+  /*@ requires player.getBoard() != null && player.getMark() != null &&
+    @ player.getBoard().isEmptyField(Integer.parseInt(message.split(" ")[2]),Integer.parseInt(message.split(" ")[3]));
+    @*/
   private void setMove(String message) {
     int xpos = Integer.parseInt(message.split(" ")[2]);
     int ypos = Integer.parseInt(message.split(" ")[3]);
@@ -253,6 +271,7 @@ public class ClientHandler extends Thread {
    * More basic messages get printed using the <code>getWin()</code> method.
    * @param endMessage, message received from the <code>Server</code> containing end reason.
    */
+  //@ requires endMessage.contains(" ");
   private void handleEnd(String endMessage) {
     String winCode = endMessage.split(" ")[1];
     int playerid = 0;
@@ -304,6 +323,7 @@ public class ClientHandler extends Thread {
       }
     } else {
       System.out.println("Game ended, thanks for playing!");
+      shutdown();
     }
   }
 
@@ -311,6 +331,8 @@ public class ClientHandler extends Thread {
    * Closes the connection with the server and breaks the <code>readInput()</code> loop.
    * This will end the current <code>Thread</code> of <code>ClientHandler</code>.
    */
+  //@ requires server.isConnected();
+  //@ ensures gameOver == true && server.isClosed();
   private void shutdown() {
     try {
       server.close();
