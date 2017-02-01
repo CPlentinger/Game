@@ -11,6 +11,8 @@ public class Board extends Observable {
    * The array is filled with an empty <code>Mark</code>
    * @param dim , an integer that indicates the dimensions of the board.
    */ 
+  //@ requires dim >= 0;
+  //@ ensures (\forall int i, j, k; 0 <= i && i < dim && 0 <= j && j < dim && 0 <= k && k < dim; fields[i][j][k] == Mark.E);
   public Board(int dim) {
     this.dim = dim;
     fields = new Mark[dim][dim][dim];
@@ -29,7 +31,9 @@ public class Board extends Observable {
    * <code>fields</code> of this <code>Board</code> gets copied.
    * @return a deep copy of this <code>Board</code> with the same references.
    */
-  public Board deepCopy() {
+  //@ requires this != null;
+  //@ ensures \result == this;
+  public /*@ pure @*/ Board deepCopy() {
     Board result = new Board(dim);
     for (int i = 0; i < dim; i++) {
       for (int j = 0; j < dim; j++) {
@@ -48,7 +52,8 @@ public class Board extends Observable {
    * @param zpos , integer representing z coordinate.
    * @return whether or not the parameter coordinates correspond with a field.
    */
-  public boolean isField(int xpos, int ypos, int zpos) {
+  //@ ensures true ==> (xpos >= 0 && xpos < dim && ypos >= 0 && ypos < dim && zpos >= 0 && zpos < dim);
+  public /*@ pure @*/ boolean isField(int xpos, int ypos, int zpos) {
     return xpos >= 0 && xpos < dim && ypos >= 0 && ypos < dim && zpos >= 0 && zpos < dim;
   }
   
@@ -58,7 +63,8 @@ public class Board extends Observable {
    * @param ypos , integer representing y coordinate.
    * @return whether or not the parameter coordinates correspond with a field.
    */
-  public boolean isField(int xpos, int ypos) {
+  //@ ensures true ==> (xpos >= 0 && xpos < dim && ypos >= 0 && ypos < dim);
+  public /*@ pure @*/ boolean isField(int xpos, int ypos) {
     return xpos >= 0 && xpos < dim && ypos >= 0 && ypos < dim;
   }
   
@@ -69,7 +75,9 @@ public class Board extends Observable {
    * @param zpos , integer representing z coordinate.
    * @return whether or not the parameter coordinates point to a empty field. 
    */
-  public boolean isEmptyField(int xpos, int ypos, int zpos) {
+  //@ requires isField(xpos, ypos, zpos);
+  //@ ensures true ==> getField(xpos,ypos,zpos) == Mark.E;
+  public /*@ pure @*/ boolean isEmptyField(int xpos, int ypos, int zpos) {
     return getField(xpos,ypos,zpos).equals(Mark.E) && isField(xpos, ypos, zpos);
   }
   
@@ -80,7 +88,9 @@ public class Board extends Observable {
    * @param ypos , integer representing y coordinate.
    * @return returns whether or not the corresponding field has place for another <code>Mark</code>.
    */
-  public boolean isEmptyField(int xpos, int ypos) {
+  //@ requires isField(xpos, ypos);
+  //@ ensures true ==> (\exists int z; 0 <= z && z < dim; isEmptyField(xpos, ypos, z));
+  public /*@ pure @*/ boolean isEmptyField(int xpos, int ypos) {
     for (int z = 0; z < dim; z++) {
       if (isEmptyField(xpos,ypos,z)) {
         return true;
@@ -94,7 +104,9 @@ public class Board extends Observable {
    * @param zpos , integer representing layer to check.
    * @return whether or not the whole layer is empty.
    */
-  public boolean isEmptyLayer(int zpos) {
+  //@ requires 0 >= zpos && zpos < dim;
+  //@ ensures true ==> (\forall int x, y; 0 >= x && x < dim && 0 >= y && y < dim; isEmptyField(x, y, zpos));
+  public /*@ pure @*/ boolean isEmptyLayer(int zpos) {
     for (int x = 0; x < dim; x++) {
       for (int y = 0; y < dim; y++) {
         if (!isEmptyField(x,y,zpos)) {
@@ -112,7 +124,9 @@ public class Board extends Observable {
    * @param zpos , integer representing z coordinate.
    * @return <code>Mark</code> at the corresponding field.
    */
-  public Mark getField(int xpos, int ypos, int zpos) {
+  //@ requires isField(xpos, ypos, zpos);
+  //@ ensures fields[xpos][ypos][zpos] == \result;
+  public /*@ pure @*/ Mark getField(int xpos, int ypos, int zpos) {
     if (isField(xpos, ypos, zpos)) {
       return fields[xpos][ypos][zpos];
     } else {
@@ -127,6 +141,8 @@ public class Board extends Observable {
    * @param zpos , integer representing z coordinate.
    * @param mark , <code>Mark</code> to put at the corresponding field.
    */
+  //@ requires isField(xpos, ypos, zpos);
+  //@ ensures fields[xpos][ypos][zpos] == mark;
   public void setField(int xpos, int ypos, int zpos, Mark mark) {
     if (isField(xpos, ypos, zpos)) {
       fields[xpos][ypos][zpos] = mark;
@@ -141,6 +157,8 @@ public class Board extends Observable {
    * @param ypos , integer representing y coordinate.
    * @param mark , <code>Mark</code> to put at the top of corresponding field.
    */
+  //@ requires isEmptyField(xpos, ypos);
+  //@ ensures (\exists int z; 0 <= z && z < dim; getField(xpos, ypos, z) == mark && (\forall int q; 0 <= q && q < z; !isEmptyField(xpos, ypos, q)));
   public void setTopField(int xpos, int ypos, Mark mark) {
     if (isField(xpos, ypos)) {
       for (int z = 0; z < dim; z++) {
@@ -160,7 +178,11 @@ public class Board extends Observable {
    * @param mark , <code>Mark</code> that the line should contain.
    * @return whether or not the board contains a one-dimensional line with four of the input mark.
    */
-  public boolean has1DLine(Mark mark) {
+  /*@ ensures true ==> (\exists int z; 0 <= z && z < dim; (\exists int x; 0 <= x && x < dim; (\forall int y; 0 <= y && y < dim; getField(x, y, z) == mark))) ||
+    @ (\exists int z; 0 <= z && z < dim; (\exists int y; 0 <= y && y < dim; (\forall int x; 0 <= x && x < dim; getField(x, y, z) == mark))) ||
+    @ (\exists int y; 0 <= y && y < dim; (\exists int x; 0 <= x && x < dim; (\forall int z; 0 <= z && z < dim; getField(x, y, z) == mark)));
+    @*/
+  public /*@ pure @*/ boolean has1DLine(Mark mark) {
     int yseq;
     int zseq;
     int xseq;
@@ -208,7 +230,8 @@ public class Board extends Observable {
    * @param mark , <code>Mark</code> that the line should contain.
    * @return whether or not the Board contains a two-dimensional line with four of the input Mark.
    */
-  public boolean has2DLine(Mark mark) {
+  // JML not applicable here.
+  public /*@ pure @*/ boolean has2DLine(Mark mark) {
     for (int x = 0, y = 0; x < dim; y++) {
       if (!getField(x,y,y).equals(mark)) {
         y = 0;
@@ -268,7 +291,8 @@ public class Board extends Observable {
    * @param mark , <code>Mark</code> that the line should contain.
    * @return whether or not the board contains a three-dimensional line with four of the input Mark.
    */
-  public boolean has3DLine(Mark mark) {
+  // JML not applicable here.
+  public /*@ pure @*/ boolean has3DLine(Mark mark) {
     int one = 0;
     int two = 0;
     int three = 0;
@@ -298,7 +322,8 @@ public class Board extends Observable {
    * @param mark , the winning <code>Mark</code> to check for.
    * @return whether or not the input <code>Mark</code> has won the game.
    */
-  public boolean isWinner(Mark mark) {
+  //@ ensures true ==> has1DLine(mark) || has2DLine(mark) || has3DLine(mark);
+  public /*@ pure @*/ boolean isWinner(Mark mark) {
     return has1DLine(mark) || has2DLine(mark) || has3DLine(mark);
   }
   
@@ -306,7 +331,8 @@ public class Board extends Observable {
    * Checks whether or not the board has a winner using both marks in <code>isWinner()</code>.
    * @return whether or not the board has a winner.
    */
-  public boolean hasWinner() {
+  //@ ensures true ==> isWinner(Mark.O) || isWinner(Mark.X);
+  public /*@ pure @*/ boolean hasWinner() {
     return isWinner(Mark.O) || isWinner(Mark.X);
   }
   
@@ -314,7 +340,8 @@ public class Board extends Observable {
    * Checks whether or not all fields are full using <code>isEmptyField()</code>.
    * @return whether or not all fields are full.
    */
-  public boolean isFull() {
+  //@ ensures true ==> (\forall int x, y, z; 0 <= x && x < dim && 0 <= y && y < dim && 0 <= z && z < dim; isEmptyField(x, y, z));
+  public /*@ pure @*/ boolean isFull() {
     for (int z = 0; z < dim; z++) {
       for (int y = 0; y < dim; y++) {
         for (int x = 0; x < dim; x++) {
