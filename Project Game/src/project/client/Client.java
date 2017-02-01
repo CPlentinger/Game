@@ -41,18 +41,18 @@ public class Client {
     while (infoSet == false) {
       System.out.print("Please input server address and port to connect(i.e <address> <port>): ");
       try {
-        String input = in.readLine().replaceAll(" ", "-");
+        String input = in.readLine();
         adrs = InetAddress.getByName(input.split(" ")[0]);
         port = Integer.parseInt(input.split(" ")[1]);
         socket = new Socket(adrs, port);
         infoSet = true;
         
         System.out.print("Please choose a username: ");
-        username = in.readLine();
+        username = in.readLine().replaceAll(" ", "-");
         System.out.print("Do you want to start the computer player? (y/n)");
         player = in.readLine();
         
-      } catch (UnknownHostException | NoRouteToHostException exc) {
+      } catch (NoRouteToHostException exc) {
         System.out.println("Input doesn't contain a valid server address.");
         System.out.println(USAGE);
       } catch (ConnectException exc) {
