@@ -233,7 +233,7 @@ public class ClientHandler extends Thread {
     try {
       xpos = Integer.parseInt(move.split(" ")[0]);
       ypos = Integer.parseInt(move.split(" ")[1]);
-    } catch (ArrayIndexOutOfBoundsException exc) {
+    } catch (NumberFormatException | ArrayIndexOutOfBoundsException exc) {
       System.out.println("Usage: x and y value seperated by a space.");
       askMove();
     }
